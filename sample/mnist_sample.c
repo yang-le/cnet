@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 {
 	int i = 0;
 	int right = 0;
-	float rate = 1e-3;
+	float rate = 1e-4;
 
 	net_t *n = net_create(3);
 
@@ -72,8 +72,8 @@ int main(int argc, char** argv)
 	
 	net_finish(n);
 
-	images = mnist_open(strcat(argv[1], "/train-images-idx3-ubyte"));
-	labels = mnist_open(strcat(argv[1], "/train-labels-idx1-ubyte"));
+	images = mnist_open(argv[1]);
+	labels = mnist_open(argv[2]);
 
 	for (i = 0; i < 20; ++i)
 	{
@@ -94,8 +94,8 @@ int main(int argc, char** argv)
 	mnist_close(labels);
 	mnist_close(images);
 
-	images = mnist_open(strcat(argv[1], "/t10k-images-idx3-ubyte"));
-	labels = mnist_open(strcat(argv[1], "/t10k-labels-idx1-ubyte"));
+	images = mnist_open(argv[3]);
+	labels = mnist_open(argv[4]);
 
 	for (i = 0; i < 10000; ++i)
 	{
