@@ -19,7 +19,7 @@ static void feed_data(net_t *n)
 	++i;
 }
 
-void xor_sample(void)
+int main(int argc, char** argv)
 {
 	int i = 0;
 	float rate = 1;
@@ -45,4 +45,6 @@ void xor_sample(void)
 	}
 
 	net_destroy(n);
+
+	return 0;
 }

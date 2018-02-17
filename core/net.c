@@ -43,7 +43,7 @@ void net_finish(net_t *n)
 	}
 	
 	total_size = n->layer[0]->in.size + param_size + out_size;
-	LOG("total: layers %d, params %d, heap size %d\n", n->size, param_size, total_size * 2 * sizeof(data_val_t));
+	LOG("total: layers %d, params %d, heap size %ld\n", n->size, param_size, total_size * 2 * sizeof(data_val_t));
 
 	temp = (data_val_t*)calloc(total_size, 2 * sizeof(data_val_t));
 

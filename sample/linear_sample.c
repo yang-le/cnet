@@ -16,7 +16,7 @@ static void feed_data(net_t *n)
 	++i;
 }
 
-void linear_sample()
+int main(int argc, char** argv)
 {
 	int i = 0;
 	float rate = 1e-2;
@@ -36,4 +36,6 @@ void linear_sample()
 	}
 
 	net_destroy(n);
+
+	return 0;
 }

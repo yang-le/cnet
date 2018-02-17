@@ -1,3 +1,4 @@
+#include <string.h>
 #include "mnist.h"
 #include "net.h"
 #include "log.h"
@@ -57,7 +58,7 @@ int arg_max(data_val_t *data, int n)
 	net_destroy(n);
 #endif
 
-void mnist_sample(void)
+int main(int argc, char** argv)
 {
 	int i = 0;
 	int right = 0;
@@ -71,8 +72,8 @@ void mnist_sample(void)
 	
 	net_finish(n);
 
-	images = mnist_open("F:/temp/cnet/cnet/mnist/train-images-idx3-ubyte");
-	labels = mnist_open("F:/temp/cnet/cnet/mnist/train-labels-idx1-ubyte");
+	images = mnist_open(strcat(argv[1], "/train-images-idx3-ubyte"));
+	labels = mnist_open(strcat(argv[1], "/train-labels-idx1-ubyte"));
 
 	for (i = 0; i < 20; ++i)
 	{
@@ -93,8 +94,8 @@ void mnist_sample(void)
 	mnist_close(labels);
 	mnist_close(images);
 
-	images = mnist_open("F:/temp/cnet/cnet/mnist/t10k-images-idx3-ubyte");
-	labels = mnist_open("F:/temp/cnet/cnet/mnist/t10k-labels-idx1-ubyte");
+	images = mnist_open(strcat(argv[1], "/t10k-images-idx3-ubyte"));
+	labels = mnist_open(strcat(argv[1], "/t10k-labels-idx1-ubyte"));
 
 	for (i = 0; i < 10000; ++i)
 	{
@@ -110,4 +111,6 @@ void mnist_sample(void)
 	mnist_close(images);
 
 	net_destroy(n);
+
+	return 0;
 }
