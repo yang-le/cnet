@@ -1,5 +1,6 @@
 #include "fc_layer.h"
 #include "log.h"
+#include "gemm.h"
 
 void fc_layer_prepare(layer_t *l)
 {
@@ -23,31 +24,48 @@ void fc_layer_prepare(layer_t *l)
 
 void fc_layer_forward(layer_t *l)
 {
-	int o = 0;
-	for (o = 0; o < l->out.size; ++o)
+	int i = 0;
+
+	int m = 1;
+    int k = l->in.size;
+    int n = l->out.size;
+    float *a = l->in.val;
+    float *b = l->param.val;
+    float *c = l->out.val;
+
+	gemm(0, 1, m, n, k, 1, a, k, b, k, 0, c, n);
+
+	for (i = 0; i < l->out.size; ++i)
 	{
-		int i = 0;
-		l->out.val[o] = 0;
-		for (i = 0; i < l->in.size; ++i)
-		{
-			l->out.val[o] += l->param.val[o * (l->in.size + 1) + i] * l->in.val[i];
-		}
-		l->out.val[o] += l->param.val[o * (l->in.size + 1) + l->in.size];
+		l->out.val[i] += l->param.val[l->out.size * l->in.size + i];
 	}
 }
 
 void fc_layer_backward(layer_t *l)
 {
-	int o = 0;
-	for (o = 0; o < l->out.size; ++o)
+	int i = 0;
+
+    int m = l->out.size;
+    int k = 1;
+    int n = l->in.size;
+    float *a = l->out.grad;
+    float *b = l->in.val;
+    float *c = l->param.grad;
+
+	gemm(1, 0, m, n, k, 1, a, m, b, n, 1, c, n);
+
+	m = 1;
+    k = l->out.size;
+    n = l->in.size;
+    a = l->out.grad;
+    b = l->param.val;
+    c = l->in.grad;
+
+	gemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n);
+
+	for (i = 0; i < l->out.size; ++i)
 	{
-		int i = 0;
-		for (i = 0; i < l->in.size; ++i)
-		{
-			l->in.grad[i] += l->out.grad[o] * l->param.val[o * (l->in.size + 1) + i];
-			l->param.grad[o * (l->in.size + 1) + i] += l->out.grad[o] * l->in.val[i];
-		}
-		l->param.grad[o * (l->in.size + 1) + l->in.size] += l->out.grad[o];
+		l->param.grad[l->out.size * l->in.size + i] += l->out.grad[i];
 	}
 }
 
