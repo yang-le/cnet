@@ -38,6 +38,7 @@ void im2col(float* data_im,
     }
 }
 
+//see https://github.com/pjreddie/darknet/blob/master/src/col2im.c
 
 static void col2im_add_pixel(float *im, int height, int width, int channels,
                         int row, int col, int channel, int pad, float val)
