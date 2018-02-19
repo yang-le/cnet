@@ -2,7 +2,7 @@
 #include "log.h"
 #include "gemm.h"
 
-void fc_layer_prepare(layer_t *l)
+static void fc_layer_prepare(layer_t *l)
 {
 	if (l->in.size == 0)
 	{
@@ -22,7 +22,7 @@ void fc_layer_prepare(layer_t *l)
 	LOG("fc_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->param.size);
 }
 
-void fc_layer_forward(layer_t *l)
+static void fc_layer_forward(layer_t *l)
 {
 	int i = 0;
 
@@ -41,7 +41,7 @@ void fc_layer_forward(layer_t *l)
 	}
 }
 
-void fc_layer_backward(layer_t *l)
+static void fc_layer_backward(layer_t *l)
 {
 	int i = 0;
 

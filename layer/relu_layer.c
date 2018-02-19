@@ -1,7 +1,7 @@
 #include "relu_layer.h"
 #include "log.h"
 
-void relu_layer_prepare(layer_t *l)
+static void relu_layer_prepare(layer_t *l)
 {
 	if (l->in.size == 0)
 	{
@@ -21,7 +21,7 @@ void relu_layer_prepare(layer_t *l)
 	LOG("relu_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->param.size);
 }
 
-void relu_layer_forward(layer_t *l)
+static void relu_layer_forward(layer_t *l)
 {
 	int i = 0;
 	for (i = 0; i < l->out.size; ++i)
@@ -32,7 +32,7 @@ void relu_layer_forward(layer_t *l)
 	}
 }
 
-void relu_layer_backward(layer_t *l)
+static void relu_layer_backward(layer_t *l)
 {
 	int i = 0;
 	for (i = 0; i < l->in.size; ++i)

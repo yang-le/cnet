@@ -1,7 +1,7 @@
 #include "mse_layer.h"
 #include "log.h"
 
-void mse_layer_prepare(layer_t *l)
+static void mse_layer_prepare(layer_t *l)
 {
 	if (l->in.size != 0)
 	{
@@ -21,7 +21,7 @@ void mse_layer_prepare(layer_t *l)
 	LOG("mse_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->param.size);
 }
 
-void mse_layer_forward(layer_t *l)
+static void mse_layer_forward(layer_t *l)
 {
 	int i = 0;
 
@@ -32,7 +32,7 @@ void mse_layer_forward(layer_t *l)
 	}	
 }
 
-void mse_layer_backward(layer_t *l)
+static void mse_layer_backward(layer_t *l)
 {
 	int i = 0;
 	for (i = 0; i < l->in.size; ++i)

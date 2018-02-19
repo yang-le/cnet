@@ -2,7 +2,7 @@
 #include "log.h"
 #include <math.h>
 
-void sigmoid_layer_prepare(layer_t *l)
+static void sigmoid_layer_prepare(layer_t *l)
 {
 	if (l->in.size == 0)
 	{
@@ -22,7 +22,7 @@ void sigmoid_layer_prepare(layer_t *l)
 	LOG("sigmoid_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->param.size);
 }
 
-void sigmoid_layer_forward(layer_t *l)
+static void sigmoid_layer_forward(layer_t *l)
 {
 	int i = 0;
 	for (i = 0; i < l->out.size; ++i)
@@ -31,7 +31,7 @@ void sigmoid_layer_forward(layer_t *l)
 	}
 }
 
-void sigmoid_layer_backward(layer_t *l)
+static void sigmoid_layer_backward(layer_t *l)
 {
 	int i = 0;
 	for (i = 0; i < l->in.size; ++i)

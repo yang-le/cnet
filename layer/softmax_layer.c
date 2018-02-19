@@ -2,7 +2,7 @@
 #include "log.h"
 #include <math.h>
 
-void softmax_layer_prepare(layer_t *l)
+static void softmax_layer_prepare(layer_t *l)
 {
 	if (l->in.size == 0)
 	{
@@ -22,7 +22,7 @@ void softmax_layer_prepare(layer_t *l)
 	LOG("softmax_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->param.size);
 }
 
-void softmax_layer_forward(layer_t *l)
+static void softmax_layer_forward(layer_t *l)
 {
 	int i = 0;
 	float sum = 0;
@@ -39,7 +39,7 @@ void softmax_layer_forward(layer_t *l)
 	}
 }
 
-void softmax_layer_backward(layer_t *l)
+static void softmax_layer_backward(layer_t *l)
 {
 	int o = 0;
 	for (o = 0; o < l->out.size; ++o)

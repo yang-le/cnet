@@ -23,7 +23,7 @@ static void feed_data(net_t *n)
 	++i;
 }
 
-int arg_max(data_val_t *data, int n)
+static int arg_max(data_val_t *data, int n)
 {
 	int i = 0;
 	int max = 0;
