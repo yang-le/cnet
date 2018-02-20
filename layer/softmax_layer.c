@@ -29,7 +29,7 @@ static void softmax_layer_forward(layer_t *l)
 
 	for (i = 0; i < l->out.size; ++i)
 	{
-		l->out.val[i] = exp(l->in.val[i]);
+		l->out.val[i] = exp(l->in.val[i] / 100);
 		sum += l->out.val[i];
 	}
 

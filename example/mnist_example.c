@@ -1,10 +1,14 @@
 #include <string.h>
+#include <time.h>
 #include "mnist.h"
 #include "net.h"
 #include "log.h"
 #include "fc_layer.h"
 #include "softmax_layer.h"
 #include "cee_layer.h"
+#include "conv_layer.h"
+#include "pooling_layer.h"
+#include "relu_layer.h"
 
 static idx_t *images = NULL;
 static idx_t *labels = NULL;
@@ -35,16 +39,27 @@ static int arg_max(data_val_t *data, int n)
 	return max;
 }
 
+int main(int argc, char** argv)
+{
+	int i = 0;
+	int right = 0;
+	float rate = 1e-5;
 #if 0
+	net_t *n = net_create(3);
+
+	net_add(n, fc_layer(-28 * 28, 10, 0));
+	net_add(n, softmax_layer(10, 10, 0));
+	net_add(n, cee_layer(10, 0, -10));
+#else
 	net_t *n = net_create(11);
 
 	net_add(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0));
 	net_add(n, relu_layer(0, 0, 0));
-	net_add(n, max_pooling_layer(32, 28, 28, 14, 14, 0, 0, 0));
+	net_add(n, max_pooling_layer(32, 28, 28, 14, 14, 2, 0, 0));
 
 	net_add(n, conv_layer(32, 14, 14, 64, 14, 14, 5, 1, 0));
 	net_add(n, relu_layer(0, 0, 0));
-	net_add(n, max_pooling_layer(64, 14, 14, 7, 7, 0, 0, 0));
+	net_add(n, max_pooling_layer(64, 14, 14, 7, 7, 2, 0, 0));
 
 	net_add(n, fc_layer(0, 1024, 0));
 	net_add(n, relu_layer(0, 0, 0));
@@ -52,24 +67,7 @@ static int arg_max(data_val_t *data, int n)
 	net_add(n, fc_layer(0, 10, 0));
 	net_add(n, softmax_layer(0, 0, 0));
 	net_add(n, cee_layer(0, 0, 0));
-
-	net_finish(n);
-
-	net_destroy(n);
 #endif
-
-int main(int argc, char** argv)
-{
-	int i = 0;
-	int right = 0;
-	float rate = 1e-4;
-
-	net_t *n = net_create(3);
-
-	net_add(n, fc_layer(-28 * 28, 10, 0));
-	net_add(n, softmax_layer(10, 10, 0));
-	net_add(n, cee_layer(10, 0, -10));
-	
 	net_finish(n);
 
 	images = mnist_open(argv[1]);
@@ -78,9 +76,10 @@ int main(int argc, char** argv)
 	for (i = 0; i < 20; ++i)
 	{
 		int j = 0;
+		time_t start = time(NULL);
 
-		LOG("round %d train with rate %f\n", i, rate);
-		net_train(n, feed_data, rate, 60000);
+		net_train(n, feed_data, rate, 1000);
+		LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
 
 		feed_data(n);
 		net_forward(n);

@@ -69,11 +69,20 @@ void net_finish(net_t *n)
 
 		//LOG("layer %d param ", i);
 
-		if (n->layer[i]->param.mutable)
-		for (j = 0; j < n->layer[i]->param.size; ++j)
+		if (!n->layer[i]->param.immutable)
 		{
-			n->layer[i]->param.val[j] = 1.0 * (rand() - RAND_MAX / 2) / RAND_MAX;
-			//LOG("%f ", n->layer[i]->param.val[j]);
+			for (j = 0; j < n->layer[i]->param.size - n->layer[i]->out.size; ++j)
+			{
+				n->layer[i]->param.val[j] = 0.2 * (rand() - RAND_MAX / 2) / RAND_MAX;
+				//LOG("%f ", n->layer[i]->param.val[j]);
+			}
+
+			// init bias
+			for (; j < n->layer[i]->param.size; ++j)
+			{
+				n->layer[i]->param.val[j] = 0.1;
+				//LOG("%f ", n->layer[i]->param.val[j]);
+			}
 		}
 
 		//LOG("\n");
@@ -121,11 +130,11 @@ void net_backward(net_t *n)
 	{
 		int j = 0;
 
-		if (n->layer[i]->param.mutable)
+		if (!n->layer[i]->param.immutable)
 		for (j = 0; j < n->layer[i]->param.size; ++j)
 			n->layer[i]->param.val[j] -= n->rate * n->layer[i]->param.grad[j];
 
-		if (n->layer[i]->in.mutable)
+		if (!n->layer[i]->in.immutable)
 		for (j = 0; j < n->layer[i]->in.size; ++j)
 			n->layer[i]->in.val[j] -= n->rate * n->layer[i]->in.grad[j];
 	}
@@ -164,11 +173,12 @@ void net_train(net_t *n, feed_func_t feed, float rate, int round)
 	}
 
 	//LOG("static:\n");
+#if 0
 	for(i = 0; i < n->size; ++i)
 	{
 		int j = 0;
 
-		if (n->layer[i]->param.mutable)
+		if (!n->layer[i]->param.immutable)
 		{
 			LOG("layer %d: ", i);
 			for (j = 0; j < n->layer[i]->param.size; ++j)
@@ -178,5 +188,6 @@ void net_train(net_t *n, feed_func_t feed, float rate, int round)
 			LOG("\n");
 		}
 	}
+#endif
 	LOG("avg loss = %f\n",  loss / round);
 }

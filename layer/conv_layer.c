@@ -47,7 +47,7 @@ static void conv_layer_prepare(layer_t *l)
 	
 	conv->col.size = conv->ic * conv->k * conv->k * conv->oh * conv->ow;
 	conv->col.val = (data_val_t *)(conv + 1);
-	conv->col.grad = conv->col.val + conv->col.size;
+	conv->col.grad = conv->col.val;
 
 	LOG("conv_layer: %d x %d x %d => %d x %d x %d, kernel %d x %d + %d, padding %d, params %d\n",
 		conv->ic, conv->iw, conv->ih, conv->oc, conv->ow, conv->oh, conv->k, conv->k, conv->s, conv->p, l->param.size);
