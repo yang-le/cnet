@@ -9,6 +9,7 @@
 #include "conv_layer.h"
 #include "pooling_layer.h"
 #include "relu_layer.h"
+#include "dropout_layer.h"
 
 static idx_t *images = NULL;
 static idx_t *labels = NULL;
@@ -51,7 +52,8 @@ int main(int argc, char** argv)
 	net_add(n, softmax_layer(10, 10, 0));
 	net_add(n, cee_layer(10, 0, -10));
 #else
-	net_t *n = net_create(11);
+	net_t *n = net_create(12);
+	layer_t *dropout = dropout_layer(0, 0, 0);
 
 	net_add(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0));
 	net_add(n, relu_layer(0, 0, 0));
@@ -63,6 +65,7 @@ int main(int argc, char** argv)
 
 	net_add(n, fc_layer(0, 1024, 0));
 	net_add(n, relu_layer(0, 0, 0));
+	net_add(n, dropout);
 
 	net_add(n, fc_layer(0, 10, 0));
 	net_add(n, softmax_layer(0, 0, 0));
@@ -73,14 +76,16 @@ int main(int argc, char** argv)
 	images = mnist_open(argv[1]);
 	labels = mnist_open(argv[2]);
 
-	for (i = 0; i < 60; ++i)
+	for (i = 0; i < 20; ++i)
 	{
 		int j = 0;
 		time_t start = time(NULL);
 
-		net_train(n, feed_data, rate, 1000);
+		dropout->param.val[0] = 0.5;
+		net_train(n, feed_data, rate, 60000);
 		LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
 
+		dropout->param.val[0] = 0;
 		feed_data(n);
 		net_forward(n);
 

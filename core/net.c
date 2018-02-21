@@ -1,10 +1,12 @@
 #include <stdlib.h>
+#include <time.h>
+#include <memory.h>
+#include <math.h>
 
 #include "net.h"
 #include "layer.h"
 #include "log.h"
-#include <memory.h>
-#include <math.h>
+#include "random.h"
 
 net_t* net_create(size_t size)
 {
@@ -63,6 +65,7 @@ void net_finish(net_t *n)
 		n->layer[i]->out.grad = temp + n->layer[i]->out.size;
 	}
 
+	srand((unsigned int)time(NULL));
 	for(i = 0; i < n->size; ++i)
 	{
 		int j = 0;
@@ -73,7 +76,7 @@ void net_finish(net_t *n)
 		{
 			for (j = 0; j < n->layer[i]->param.size - n->layer[i]->out.size; ++j)
 			{
-				n->layer[i]->param.val[j] = 0.2 * (rand() - RAND_MAX / 2) / RAND_MAX;
+				truncated_normal(&n->layer[i]->param.val[j], 0, 0.1);
 				//LOG("%f ", n->layer[i]->param.val[j]);
 			}
 
