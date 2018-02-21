@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 {
 	int i = 0;
 	int right = 0;
-	float rate = 1e-5;
+	float rate = 1e-4;
 #if 0
 	net_t *n = net_create(3);
 
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 	images = mnist_open(argv[1]);
 	labels = mnist_open(argv[2]);
 
-	for (i = 0; i < 20; ++i)
+	for (i = 0; i < 60; ++i)
 	{
 		int j = 0;
 		time_t start = time(NULL);

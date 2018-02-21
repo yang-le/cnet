@@ -26,10 +26,18 @@ static void softmax_layer_forward(layer_t *l)
 {
 	int i = 0;
 	float sum = 0;
+	float max = l->in.val[0];
+
+	// see http://freemind.pluskid.org/machine-learning/softmax-vs-softmax-loss-numerical-stability
+	for (i = 1; i < l->in.size; ++i)
+	{
+		if (l->in.val[i] > max)
+			max = l->in.val[i];
+	}
 
 	for (i = 0; i < l->out.size; ++i)
 	{
-		l->out.val[i] = exp(l->in.val[i] / 100);
+		l->out.val[i] = exp(l->in.val[i] - max);
 		sum += l->out.val[i];
 	}
 

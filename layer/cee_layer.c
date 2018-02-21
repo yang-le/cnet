@@ -29,8 +29,12 @@ static void cee_layer_forward(layer_t *l)
 	l->out.val[0] = 0;
 	for (i = 0; i < l->in.size; ++i)
 	{
-		l->out.val[0] += -l->param.val[i] * log(l->in.val[i]) - (1 - l->param.val[i]) * log(1 - l->in.val[i]);
-	}	
+		// see https://www.zhihu.com/question/52242037
+		if (l->in.val[i] < 1e-10)
+			l->in.val[i] = 1e-10;
+
+		l->out.val[0] += -l->param.val[i] * log(l->in.val[i]);
+	}
 }
 
 static void cee_layer_backward(layer_t *l)
@@ -38,7 +42,7 @@ static void cee_layer_backward(layer_t *l)
 	int i = 0;
 	for (i = 0; i < l->in.size; ++i)
 	{
-		data_val_t grad = l->out.grad[0] * (l->in.val[i] - l->param.val[i]) / ((1 - l->in.val[i]) * l->in.val[i]);
+		data_val_t grad = l->out.grad[0] * (-l->param.val[i] / l->in.val[i]);
 		l->in.grad[i] += grad;
 	}
 }
