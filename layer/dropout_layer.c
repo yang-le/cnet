@@ -27,15 +27,15 @@ static void dropout_layer_forward(layer_t *l)
 {
 	int i = 0;
 
-    // just use grad to store a random number
-    uniform(l->in.grad, l->in.size, 0, 1);
-
 	for (i = 0; i < l->in.size; ++i)
 	{
-        if (l->in.grad[i] < l->param.val[0])
-            l->out.val[i] = 0;
-        else
-            l->out.val[i] = l->in.val[i] / (1 - l->param.val[0]);
+		float r = 0;
+		uniform(&r, 1, 0, 1);
+		
+		if (r < l->param.val[0])
+			l->out.val[i] = 0;
+		else
+			l->out.val[i] = l->in.val[i] / (1 - l->param.val[0]);
 	}
 }
 
@@ -44,10 +44,8 @@ static void dropout_layer_backward(layer_t *l)
 	int i = 0;
 	for (i = 0; i < l->in.size; ++i)
 	{
-		if (l->in.grad[i] < l->param.val[0])
-            l->in.grad[i] = 0;
-        else
-		    l->in.grad[i] += l->out.grad[i] / (1 - l->param.val[0]);
+		if (l->out.val[i] != 0)
+			l->in.grad[i] += l->out.grad[i] / (1 - l->param.val[0]);
 	}
 }
 
