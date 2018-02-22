@@ -1,3 +1,6 @@
+#ifdef USE_BLAS
+#include <cblas.h>
+#endif
 #include "gemm.h"
 
 // see https://github.com/pjreddie/darknet/blob/master/src/gemm.c
@@ -83,6 +86,14 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
         float BETA,
         float *C, int ldc)
 {
+#ifdef USE_BLAS
+    cblas_sgemm(
+        CblasRowMajor,
+        TA ? CblasTrans : CblasNoTrans,
+        TB ? CblasTrans : CblasNoTrans,
+        M, N, K, ALPHA, A, lda, B, ldb, BETA, C, ldc
+    );
+#else
     int i, j;
     for(i = 0; i < M; ++i){
         for(j = 0; j < N; ++j){
@@ -97,4 +108,5 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
         gemm_nt(M, N, K, ALPHA,A,lda, B, ldb,C,ldc);
     else
         gemm_tt(M, N, K, ALPHA,A,lda, B, ldb,C,ldc);
+#endif
 }

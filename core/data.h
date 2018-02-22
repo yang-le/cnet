@@ -8,3 +8,8 @@ typedef struct {
 	int immutable;
 	int size;
 } data_t;
+
+
+void data_update(data_t *data, double rate);
+void data_load(char *file, data_t *data);
+void data_save(data_t *data, char *file);

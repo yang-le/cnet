@@ -124,22 +124,18 @@ void net_backward(net_t *n)
 
 	for(i = n->size - 1; i >= 0; --i)
 	{
-		int j = 0;
-		
 		BACKWARD(n->layer[i]);
 	}
-	
+}
+
+void net_update(net_t *n)
+{
+	int i = 0;
+
 	for(i = 0; i < n->size; ++i)
 	{
-		int j = 0;
-
-		if (!n->layer[i]->param.immutable)
-		for (j = 0; j < n->layer[i]->param.size; ++j)
-			n->layer[i]->param.val[j] -= n->rate * n->layer[i]->param.grad[j];
-
-		if (!n->layer[i]->in.immutable)
-		for (j = 0; j < n->layer[i]->in.size; ++j)
-			n->layer[i]->in.val[j] -= n->rate * n->layer[i]->in.grad[j];
+		data_update(&n->layer[i]->in, n->rate);
+		data_update(&n->layer[i]->param, n->rate);
 	}
 }
 
@@ -174,6 +170,8 @@ void net_train(net_t *n, feed_func_t feed, float rate, int round)
 
 		loss +=  LAST_LAYER(n)->out.val[0];
 	}
+
+	net_update(n);
 
 	//LOG("static:\n");
 #if 0

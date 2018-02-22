@@ -6,6 +6,9 @@ include_directories(core layer)
 
 file(GLOB srcs "core/*.c" "layer/*.c")
 
+option(USE_OPENMP "use openmp to speed up gemm")
+option(USE_BLAS "use blas to speed up gemm")
+
 if(USE_OPENMP)
 find_package(OpenMP REQUIRED)
 if(OPENMP_FOUND)
@@ -15,7 +18,17 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}
 endif()
 endif()
 
+if(USE_BLAS)
+find_package(BLAS REQUIRED)
+if(BLAS_FOUND)
+add_definitions(-DUSE_BLAS)
+endif()
+endif()
+
 add_library(cnet ${srcs})
+if(BLAS_FOUND)
+target_link_libraries(cnet ${BLAS_LIBRARIES} ${BLAS_LINKER_FLAGS})
+endif()
 
 add_executable(linear_example example/linear_example.c)
 target_link_libraries(linear_example cnet m)
