@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 	net_add(n, cee_layer(10, 0, -10));
 #else
 	net_t *n = net_create(12);
-	layer_t *dropout = dropout_layer(0, 0, 0);
+	layer_t *dropout = dropout_layer(0, 0);
 
 	net_add(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0));
 	net_add(n, relu_layer(0, 0, 0));
@@ -81,11 +81,11 @@ int main(int argc, char** argv)
 		int j = 0;
 		time_t start = time(NULL);
 
-		dropout->param.val[0] = 0.5;
+		SET_DROP_PROB(dropout, 0.5);
 		net_train(n, feed_data, rate, 60000);
 		LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
 
-		dropout->param.val[0] = 0;
+		SET_DROP_PROB(dropout, 0);
 		feed_data(n);
 		net_forward(n);
 

@@ -8,16 +8,19 @@ static void dropout_layer_prepare(layer_t *l)
 	if (l->in.size != 0)
 	{
 		l->out.size = l->in.size;
+		l->param.size = l->in.size;
 	}
 
 	if (l->out.size != 0)
 	{
 		l->in.size = l->out.size;
+		l->param.size = l->out.size;
 	}
 
-	if (l->param.size != 1)
+	if (l->param.size != 0)
 	{
-		l->param.size = 1;
+		l->in.size = l->param.size;
+		l->out.size = l->param.size;
 	}
 
 	LOG("dropout_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->param.size);
@@ -26,26 +29,27 @@ static void dropout_layer_prepare(layer_t *l)
 static void dropout_layer_forward(layer_t *l)
 {
 	int i = 0;
+	dropout_layer_t *drop = (dropout_layer_t*)l;
 
+	uniform(l->param.val, l->param.size, 0, 1);
 	for (i = 0; i < l->in.size; ++i)
 	{
-		float r = 0;
-		uniform(&r, 1, 0, 1);
-		
-		if (r < l->param.val[0])
+		if (l->param.val[i] < drop->prob)
 			l->out.val[i] = 0;
 		else
-			l->out.val[i] = l->in.val[i] / (1 - l->param.val[0]);
+			l->out.val[i] = l->in.val[i] / (1 - drop->prob);
 	}
 }
 
 static void dropout_layer_backward(layer_t *l)
 {
 	int i = 0;
+	dropout_layer_t *drop = (dropout_layer_t*)l;
+	
 	for (i = 0; i < l->in.size; ++i)
 	{
-		if (l->out.val[i] != 0)
-			l->in.grad[i] += l->out.grad[i] / (1 - l->param.val[0]);
+		if (l->param.val[i] >= drop->prob)
+			l->in.grad[i] += l->out.grad[i] / (1 - drop->prob);
 	}
 }
 
@@ -55,9 +59,17 @@ static const layer_func_t dropout_func = {
 	dropout_layer_backward
 };
 
-layer_t* dropout_layer(int in, int out, int param)
+layer_t* dropout_layer(int n, float droprob)
 {
-	layer_t *l = layer(in, out, param, &dropout_func);
+	dropout_layer_t *drop = (dropout_layer_t *)calloc(sizeof(dropout_layer_t), 1);
 
-	return l;
+	drop->prob = droprob;
+
+	drop->l.in.size = n;
+	drop->l.out.size = n;
+	drop->l.param.size = n;
+	drop->l.param.immutable = 1;
+	drop->l.func = &dropout_func;
+
+	return (layer_t*)drop;
 }
