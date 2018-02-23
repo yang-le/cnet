@@ -97,19 +97,7 @@ void net_forward(net_t *n)
 	int i = 0;
 	for(i = 0; i < n->size; ++i)
 	{
-		int j = 0;
-
 		FORWARD(n->layer[i]);
-
-		for (j = 0; j < n->layer[i]->in.size; ++j)
-		{
-			n->layer[i]->in.grad[j] = 0;
-		}
-
-		for (j = 0; j < n->layer[i]->param.size; ++j)
-		{
-			n->layer[i]->param.grad[j] = 0;
-		}
 	}
 }
 
@@ -134,7 +122,6 @@ void net_update(net_t *n)
 
 	for(i = 0; i < n->size; ++i)
 	{
-		data_update(&n->layer[i]->in, n->rate);
 		data_update(&n->layer[i]->param, n->rate);
 	}
 }
@@ -158,7 +145,7 @@ void net_train(net_t *n, feed_func_t feed, float rate, int round)
 	int i = 0;
 	float loss = 0;
 
-	n->rate = rate;
+	n->rate = rate / round;
 
 	for (i = 0; i < round; ++i)
 	{
@@ -190,5 +177,5 @@ void net_train(net_t *n, feed_func_t feed, float rate, int round)
 		}
 	}
 #endif
-	LOG("avg loss = %f\n",  loss / round);
+	LOG("%f\n",  loss / round);
 }

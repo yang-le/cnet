@@ -40,10 +40,10 @@ static void cee_layer_forward(layer_t *l)
 static void cee_layer_backward(layer_t *l)
 {
 	int i = 0;
+
 	for (i = 0; i < l->in.size; ++i)
 	{
-		data_val_t grad = l->out.grad[0] * (-l->param.val[i] / l->in.val[i]);
-		l->in.grad[i] += grad;
+		l->in.grad[i] = l->out.grad[0] * (-l->param.val[i] / l->in.val[i]);
 	}
 }
 

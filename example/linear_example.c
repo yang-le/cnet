@@ -8,7 +8,7 @@ static void feed_data(net_t *n)
 	static int i = 0;
 	
 	data_val_t data[4] = {0, 1, 2, 3};
-	data_val_t label[4] = {6, 14, 26, 34};
+	data_val_t label[4] = {5, 15, 25, 35};
 
 	n->layer[0]->in.val[0] = data[i % 4];
 	LAST_LAYER(n)->param.val[0] = label[i % 4];
@@ -28,12 +28,14 @@ int main(int argc, char** argv)
 	
 	net_finish(n);
 
-	for (i = 0; i < 20; ++i)
+	for (i = 0; i < 1000; ++i)
 	{
-		LOG("train with rate %f\n", rate);
-		net_train(n, feed_data, rate, 100);
+		//LOG("train with rate %f\n", rate);
+		net_train(n, feed_data, rate, 4);
 		//rate *= 2;
 	}
+
+	LOG("result = %f %f\n", n->layer[0]->param.val[0], n->layer[0]->param.val[1]);
 
 	net_destroy(n);
 

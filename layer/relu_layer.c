@@ -26,9 +26,10 @@ static void relu_layer_forward(layer_t *l)
 	int i = 0;
 	for (i = 0; i < l->out.size; ++i)
 	{
-		l->out.val[i] = 0;
 		if (l->in.val[i] > 0)
 			l->out.val[i] = l->in.val[i];
+		else
+			l->out.val[i] = 0;
 	}
 }
 
@@ -38,7 +39,9 @@ static void relu_layer_backward(layer_t *l)
 	for (i = 0; i < l->in.size; ++i)
 	{
 		if (l->in.val[i] > 0)
-			l->in.grad[i] += l->out.grad[i];
+			l->in.grad[i] = l->out.grad[i];
+		else
+			l->in.grad[i] = 0;
 	}
 }
 

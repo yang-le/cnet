@@ -1,9 +1,11 @@
+#include <math.h>
+#include <stdlib.h>
+#include <memory.h>
+
 #include "conv_layer.h"
 #include "log.h"
 #include "gemm.h"
 #include "im2col.h"
-#include <math.h>
-#include <stdlib.h>
 
 static void conv_layer_prepare(layer_t *l)
 {
@@ -95,8 +97,9 @@ static void conv_layer_backward(layer_t *l)
 	a = l->param.val;
 	b = l->out.grad;
 	c = conv->col.grad;
-	
+
 	gemm(1, 0, m, n, k, 1, a, m, b, n, 0, c, n);
+	memset(l->in.grad, 0, l->in.size * sizeof(l->in.grad[0]));
 	col2im(conv->col.grad, conv->ic, conv->ih, conv->iw, conv->k, conv->s, conv->p, l->in.grad);
 
 	for (i = 0; i < k; ++i)

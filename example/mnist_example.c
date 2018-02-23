@@ -44,7 +44,7 @@ int main(int argc, char** argv)
 {
 	int i = 0;
 	int right = 0;
-	float rate = 1e-4;
+	float rate = 1;
 #if 0
 	net_t *n = net_create(3);
 
@@ -76,23 +76,23 @@ int main(int argc, char** argv)
 	images = mnist_open(argv[1]);
 	labels = mnist_open(argv[2]);
 
-	for (i = 0; i < 20; ++i)
+	for (i = 0; i < 100; ++i)
 	{
 		int j = 0;
 		time_t start = time(NULL);
 
-		SET_DROP_PROB(dropout, 0.5);
-		net_train(n, feed_data, rate, 60000);
-		LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
+		//SET_DROP_PROB(dropout, 0.5);
+		net_train(n, feed_data, rate, images->dim[0] / 1000);
+		//LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
 
-		SET_DROP_PROB(dropout, 0);
-		feed_data(n);
-		net_forward(n);
+		//SET_DROP_PROB(dropout, 0);
+		//feed_data(n);
+		//net_forward(n);
 
-		LOG("output ");
-		for (j = 0; j <  10; ++j)
-			LOG("%f[%f] ", LAST_LAYER(n)->in.val[j], LAST_LAYER(n)->param.val[j]);
-		LOG("\n");
+		//LOG("output ");
+		//for (j = 0; j <  10; ++j)
+		//	LOG("%f[%f] ", LAST_LAYER(n)->in.val[j], LAST_LAYER(n)->param.val[j]);
+		//LOG("\n");
 	}
 
 	mnist_close(labels);

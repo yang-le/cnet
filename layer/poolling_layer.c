@@ -1,8 +1,10 @@
+#include <math.h>
+#include <stdlib.h>
+#include <memory.h>
+
 #include "pooling_layer.h"
 #include "log.h"
 #include "im2col.h"
-#include <math.h>
-#include <stdlib.h>
 
 static void pooling_layer_prepare(layer_t *l)
 {
@@ -120,6 +122,7 @@ static void max_pooling_layer_backward(layer_t *l)
 		}
 	}
 
+	memset(l->in.grad, 0, l->in.size * sizeof(l->in.grad[0]));
 	col2im(pooling->col.grad, pooling->ic, pooling->ih, pooling->iw, pooling->k, pooling->s, pooling->p, l->in.grad);
 }
 

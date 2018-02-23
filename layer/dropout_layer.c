@@ -31,7 +31,9 @@ static void dropout_layer_forward(layer_t *l)
 	int i = 0;
 	dropout_layer_t *drop = (dropout_layer_t*)l;
 
-	uniform(l->param.val, l->param.size, 0, 1);
+	if (drop->prob > 0)
+		uniform(l->param.val, l->param.size, 0, 1);
+
 	for (i = 0; i < l->in.size; ++i)
 	{
 		if (l->param.val[i] < drop->prob)
@@ -48,8 +50,10 @@ static void dropout_layer_backward(layer_t *l)
 	
 	for (i = 0; i < l->in.size; ++i)
 	{
-		if (l->param.val[i] >= drop->prob)
-			l->in.grad[i] += l->out.grad[i] / (1 - drop->prob);
+		if (l->param.val[i] < drop->prob)
+			l->in.grad[i] = 0;
+		else
+			l->in.grad[i] = l->out.grad[i] / (1 - drop->prob);
 	}
 }
 

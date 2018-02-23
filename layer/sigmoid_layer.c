@@ -36,7 +36,7 @@ static void sigmoid_layer_backward(layer_t *l)
 	int i = 0;
 	for (i = 0; i < l->in.size; ++i)
 	{
-		l->in.grad[i] += l->out.grad[i] * l->out.val[i] * (1 - l->out.val[i]);
+		l->in.grad[i] = l->out.grad[i] * l->out.val[i] * (1 - l->out.val[i]);
 	}
 }
 

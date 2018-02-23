@@ -22,7 +22,7 @@ static void feed_data(net_t *n)
 int main(int argc, char** argv)
 {
 	int i = 0;
-	float rate = 1;
+	float rate = 10;
 
 	net_t *n = net_create(5);
 
@@ -34,11 +34,14 @@ int main(int argc, char** argv)
 	
 	net_finish(n);
 
-	for (i = 0; i < 20; ++i)
+	for (i = 0; i < 3000; ++i)
 	{
-		LOG("train with rate %f\n", rate);
-		net_train(n, feed_data, rate, 1000);
+		//LOG("train with rate %f\n", rate);
+		net_train(n, feed_data, rate, 4);
+	}
 
+	for (i = 0; i < 4; ++i)
+	{
 		feed_data(n);
 		net_forward(n);
 		LOG("input %f %f, output %f\n", n->layer[0]->in.val[0], n->layer[0]->in.val[1], LAST_LAYER(n)->in.val[0]);

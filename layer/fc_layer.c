@@ -61,7 +61,7 @@ static void fc_layer_backward(layer_t *l)
 	b = l->param.val;
 	c = l->in.grad;
 
-	gemm(0, 0, m, n, k, 1, a, k, b, n, 1, c, n);
+	gemm(0, 0, m, n, k, 1, a, k, b, n, 0, c, n);
 
 	for (i = 0; i < l->out.size; ++i)
 	{

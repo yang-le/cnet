@@ -6,7 +6,10 @@ void data_update(data_t *data, double rate)
 
     if (!data->immutable)
     for (j = 0; j < data->size; ++j)
+    {
         data->val[j] -= rate * data->grad[j];
+        data->grad[j] = 0;
+    }
 }
 
 void data_load(char *file, data_t *data)

@@ -49,11 +49,13 @@ static void softmax_layer_forward(layer_t *l)
 
 static void softmax_layer_backward(layer_t *l)
 {
-	int o = 0;
-	for (o = 0; o < l->out.size; ++o)
+	int i = 0;
+	for (i = 0; i < l->in.size; ++i)
 	{
-		int i = 0;
-		for (i = 0; i < l->in.size; ++i)
+		int o = 0;
+
+		l->in.grad[i] = 0;
+		for (o = 0; o < l->out.size; ++o)
 		{
 			l->in.grad[i] += l->out.grad[o] * l->out.val[o] * ((i == o) - l->out.val[i]);
 		}

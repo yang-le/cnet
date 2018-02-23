@@ -37,9 +37,7 @@ static void mse_layer_backward(layer_t *l)
 	int i = 0;
 	for (i = 0; i < l->in.size; ++i)
 	{
-		data_val_t grad = l->out.grad[i] * (l->in.val[i] - l->param.val[i]);
-		l->in.grad[i] += grad;
-		l->param.grad[i] += -grad;
+		l->in.grad[i] = l->out.grad[i] * (l->in.val[i] - l->param.val[i]);
 	}	
 }
 
