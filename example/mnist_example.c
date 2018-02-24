@@ -44,14 +44,15 @@ int main(int argc, char** argv)
 {
 	int i = 0;
 	int right = 0;
-	float rate = 1;
 #if 0
+	float rate = 1;
 	net_t *n = net_create(3);
 
 	net_add(n, fc_layer(-28 * 28, 10, 0));
 	net_add(n, softmax_layer(10, 10, 0));
 	net_add(n, cee_layer(10, 0, -10));
 #else
+	float rate = 1e-4;
 	net_t *n = net_create(12);
 	layer_t *dropout = dropout_layer(0, 0);
 
@@ -85,10 +86,6 @@ int main(int argc, char** argv)
 		net_train(n, feed_data, rate, images->dim[0] / 1000);
 		//LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
 
-		//SET_DROP_PROB(dropout, 0);
-		//feed_data(n);
-		//net_forward(n);
-
 		//LOG("output ");
 		//for (j = 0; j <  10; ++j)
 		//	LOG("%f[%f] ", LAST_LAYER(n)->in.val[j], LAST_LAYER(n)->param.val[j]);
@@ -101,7 +98,8 @@ int main(int argc, char** argv)
 	images = mnist_open(argv[3]);
 	labels = mnist_open(argv[4]);
 
-	for (i = 0; i < 10000; ++i)
+	SET_DROP_PROB(dropout, 0);
+	for (i = 0; i < images->dim[0]; ++i)
 	{
 		feed_data(n);
 		net_forward(n);
@@ -109,7 +107,7 @@ int main(int argc, char** argv)
 		right += (arg_max(LAST_LAYER(n)->in.val, 10) == arg_max(LAST_LAYER(n)->param.val, 10));
 	}
 
-	LOG("accurcy %f\n", 1.0 * right / 10000);
+	LOG("accurcy %f\n", 1.0 * right / images->dim[0]);
 
 	mnist_close(labels);
 	mnist_close(images);

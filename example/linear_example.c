@@ -19,7 +19,7 @@ static void feed_data(net_t *n)
 int main(int argc, char** argv)
 {
 	int i = 0;
-	float rate = 1e-2;
+	float rate = 1e-1;
 
 	net_t *n = net_create(2);
 
@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 	
 	net_finish(n);
 
-	for (i = 0; i < 1000; ++i)
+	for (i = 0; i < 100; ++i)
 	{
 		//LOG("train with rate %f\n", rate);
 		net_train(n, feed_data, rate, 4);
