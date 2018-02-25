@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 	net_add(n, softmax_layer(0, 0, 0));
 	net_add(n, cee_layer(0, 0, 0));
 #endif
-	net_finish(n);
+	net_finish(n, TRAIN_DEFAULT);
 
 	images = mnist_open(argv[1]);
 	labels = mnist_open(argv[2]);

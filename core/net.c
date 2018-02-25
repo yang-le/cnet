@@ -23,13 +23,13 @@ void net_add(net_t *n, layer_t *l)
 	*n->layer++ = l;
 }
 
-void net_finish(net_t *n)
+void net_finish(net_t *n, int level)
 {
 	int i = 0;
 	int out_size = 0;
 	int param_size = 0;
 	int total_size = 0;
-	data_val_t *temp = NULL;
+	data_val_t *data_buf = NULL;
 
 	n->layer = (layer_t **)(n + 1);
 
@@ -44,25 +44,14 @@ void net_finish(net_t *n)
 		param_size += n->layer[i]->param.size;
 	}
 	
-	total_size = n->layer[0]->in.size + param_size + out_size;
-	LOG("total: layers %d, params %d, heap size %ld\n", n->size, param_size, total_size * 2 * sizeof(data_val_t));
+	total_size = (n->layer[0]->in.size + param_size + out_size) * (level + 1);
+	LOG("total: layers %d, params %d, heap size %ld\n", n->size, param_size, total_size * sizeof(data_val_t));
 
-	temp = (data_val_t*)calloc(total_size, 2 * sizeof(data_val_t));
+	data_buf = (data_val_t*)calloc(total_size, sizeof(data_val_t));
 
 	for(i = 0; i < n->size; ++i)
 	{
-		n->layer[i]->in.val = temp;
-		temp += n->layer[i]->in.size;
-		n->layer[i]->in.grad = temp;
-		temp += n->layer[i]->in.size;
-
-		n->layer[i]->param.val = temp;
-		temp += n->layer[i]->param.size;
-		n->layer[i]->param.grad = temp;
-		temp += n->layer[i]->param.size;
-
-		n->layer[i]->out.val = temp;
-		n->layer[i]->out.grad = temp + n->layer[i]->out.size;
+		data_buf += layer_data_init(n->layer[i], data_buf, level);
 	}
 
 	srand((unsigned int)time(NULL));

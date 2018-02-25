@@ -33,3 +33,4 @@ enum {
 };
 
 layer_t* layer(int in, int out, int param, const layer_func_t *func);
+size_t layer_data_init(layer_t *l, data_val_t *buf, int level);

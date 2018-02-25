@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 	net_add(n, sigmoid_layer(0, 1, 0));
 	net_add(n, mse_layer(0, 1, -1));
 	
-	net_finish(n);
+	net_finish(n, TRAIN_DEFAULT);
 
 	for (i = 0; i < 3000; ++i)
 	{
