@@ -17,5 +17,6 @@ typedef struct {
 
 size_t data_init(data_t *data, data_val_t *buf, int level);
 void data_update(data_t *data, double rate);
+void data_update_adam(data_t *data);
 void data_load(FILE *fp, data_t *data);
 void data_save(const data_t *data, FILE *fp);

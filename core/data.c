@@ -1,7 +1,25 @@
 #include "data.h"
+#include <math.h>
 
-void data_update_adam(data_t *data, double rate)
+void data_update_adam(data_t *data)
 {
+    #define ALPHA 0.001
+    #define BETA1 0.9
+    #define BETA2 0.999
+    #define EPSILON 1e-8
+
+    static int t = 0;
+    int j = 0;
+
+    ++t;
+
+    for (j = 0; j < data->size; ++j)
+    {
+        data->m[j] = BETA1 * data->m[j] + (1 - BETA1) * data->grad[j];
+        data->v[j] = BETA2 * data->v[j] + (1 - BETA2) * data->grad[j] * data->grad[j];
+        data->val[j] -= ALPHA * sqrt(1 - pow(BETA2, t)) / (1 - pow(BETA1, t)) * data->m[j] / (sqrt(data->v[j]) + EPSILON);
+        data->grad[j] = 0;
+    }
 }
 
 void data_update(data_t *data, double rate)

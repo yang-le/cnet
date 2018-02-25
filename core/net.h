@@ -12,6 +12,7 @@ typedef struct {
 	layer_t **layer;
 	int size;
 	float rate;
+	int level;
 } net_t;
 
 typedef void feed_func_t(net_t *n);

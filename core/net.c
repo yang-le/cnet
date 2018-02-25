@@ -33,6 +33,7 @@ void net_finish(net_t *n, int level)
 	data_val_t *data_buf = NULL;
 
 	n->layer = (layer_t **)(n + 1);
+	n->level = level;
 
 	for(i = 0; i < n->size; ++i)
 	{
@@ -110,10 +111,16 @@ void net_update(net_t *n)
 {
 	int i = 0;
 
-	for(i = 0; i < n->size; ++i)
-	{
-		data_update(&n->layer[i]->param, n->rate);
-	}
+	if (n->level == TRAIN_ADAM)
+		for(i = 0; i < n->size; ++i)
+		{
+			data_update_adam(&n->layer[i]->param);
+		}
+	else
+		for(i = 0; i < n->size; ++i)
+		{
+			data_update(&n->layer[i]->param, n->rate);
+		}
 }
 
 void net_destroy(net_t *n)
