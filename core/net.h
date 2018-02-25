@@ -29,3 +29,6 @@ void net_backward(net_t *n);
 void net_update(net_t *n);
 
 void net_train(net_t *n, feed_func_t feed, float rate, int round);
+
+void net_param_save(net_t *n, const char *file);
+void net_param_load(net_t *n, const char *file);

@@ -77,6 +77,8 @@ int main(int argc, char** argv)
 	images = mnist_open(argv[1]);
 	labels = mnist_open(argv[2]);
 
+	net_param_load(n, "params.bin");
+
 	for (i = 0; i < 1000; ++i)
 	{
 		int j = 0;
@@ -90,7 +92,11 @@ int main(int argc, char** argv)
 		//for (j = 0; j <  10; ++j)
 		//	LOG("%f[%f] ", LAST_LAYER(n)->in.val[j], LAST_LAYER(n)->param.val[j]);
 		//LOG("\n");
+		if (i % 10 == 0)
+			net_param_save(n, "params.bin");
 	}
+
+	net_param_save(n, "params.bin");
 
 	mnist_close(labels);
 	mnist_close(images);

@@ -44,10 +44,14 @@ size_t data_init(data_t *data, data_val_t *buf, int level)
     return buf - start;
 }
 
-void data_load(char *file, data_t *data)
+void data_load(FILE *fp, data_t *data)
 {
+    fread(data, sizeof(int), 1, fp);
+    fread(data->val, sizeof(data_val_t), data->size, fp);
 }
 
-void data_save(data_t *data, char *file)
+void data_save(const data_t *data, FILE *fp)
 {
+    fwrite(data, sizeof(int), 1, fp);
+    fwrite(data->val, sizeof(data_val_t), data->size, fp);
 }

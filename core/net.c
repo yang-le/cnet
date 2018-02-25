@@ -169,3 +169,35 @@ void net_train(net_t *n, feed_func_t feed, float rate, int round)
 #endif
 	LOG("%f\n",  loss / round);
 }
+
+void net_param_save(net_t *n, const char *file)
+{
+	int i = 0;
+	FILE *fp = fopen(file, "wb");
+
+	for(i = 0; i < n->size; ++i)
+	{
+		data_save(&n->layer[i]->param, fp);
+	}
+
+	fclose(fp);
+}
+
+void net_param_load(net_t *n, const char *file)
+{
+	int i = 0;
+	FILE *fp = fopen(file, "rb");
+
+	if (fp == NULL)
+	{
+		LOG("param file %s not exist!\n", file);
+		return;
+	}
+
+	for(i = 0; i < n->size; ++i)
+	{
+		data_load(fp, &n->layer[i]->param);
+	}
+
+	fclose(fp);
+}
