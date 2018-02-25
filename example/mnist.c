@@ -27,7 +27,7 @@ idx_t* mnist_open(char* file)
 		
 		//printf("type = %d, dims = %d\n", mnist_data->type, mnist_data->dims);
 
-		mnist_data->dim = (int32_t *)calloc(sizeof(*(mnist_data->dim)), mnist_data->dims);
+		mnist_data->dim = (int32_t *)calloc(mnist_data->dims, sizeof(*(mnist_data->dim)));
 		for (i = 0; i < mnist_data->dims; ++i) {
 			fread(&(mnist_data->dim[i]), sizeof(*(mnist_data->dim)), 1, fp);
 		}

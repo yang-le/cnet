@@ -1,9 +1,10 @@
 #include "layer.h"
+#include "common.h"
 #include <stdlib.h>
 
 layer_t* layer(int in, int out, int param, const layer_func_t *func)
 {
-	layer_t *l = (layer_t *)calloc(1, sizeof(layer_t));
+	layer_t *l = (layer_t *)alloc(1, sizeof(layer_t));
 
 	l->in.size = abs(in);
 	l->in.immutable = (in < 0);

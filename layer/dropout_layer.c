@@ -1,6 +1,7 @@
 #include "dropout_layer.h"
 #include "log.h"
 #include "random.h"
+#include "common.h"
 #include <math.h>
 
 static void dropout_layer_prepare(layer_t *l)
@@ -65,7 +66,7 @@ static const layer_func_t dropout_func = {
 
 layer_t* dropout_layer(int n, float droprob)
 {
-	dropout_layer_t *drop = (dropout_layer_t *)calloc(sizeof(dropout_layer_t), 1);
+	dropout_layer_t *drop = (dropout_layer_t *)alloc(1, sizeof(dropout_layer_t));
 
 	drop->prob = droprob;
 

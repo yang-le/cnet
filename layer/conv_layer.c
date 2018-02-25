@@ -6,6 +6,7 @@
 #include "log.h"
 #include "gemm.h"
 #include "im2col.h"
+#include "common.h"
 
 static void conv_layer_prepare(layer_t *l)
 {
@@ -117,8 +118,8 @@ static const layer_func_t conv_func = {
 
 layer_t * conv_layer(int ic, int iw, int ih, int oc, int ow, int oh, int k, int s, int p)
 {
-	conv_layer_t *conv = (conv_layer_t *)calloc(sizeof(conv_layer_t) +
-		ic * k * k * oh * ow * sizeof(data_val_t), 1);
+	conv_layer_t *conv = (conv_layer_t *)alloc(1, sizeof(conv_layer_t) +
+		ic * k * k * oh * ow * sizeof(data_val_t));
 
 	conv->l.func = &conv_func;
 

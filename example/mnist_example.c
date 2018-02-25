@@ -77,14 +77,14 @@ int main(int argc, char** argv)
 	images = mnist_open(argv[1]);
 	labels = mnist_open(argv[2]);
 
-	for (i = 0; i < 100; ++i)
+	for (i = 0; i < 1000; ++i)
 	{
 		int j = 0;
 		time_t start = time(NULL);
 
-		//SET_DROP_PROB(dropout, 0.5);
-		net_train(n, feed_data, rate, images->dim[0] / 1000);
-		//LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
+		SET_DROP_PROB(dropout, 0.5);
+		net_train(n, feed_data, rate, images->dim[0] / 100);
+		LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
 
 		//LOG("output ");
 		//for (j = 0; j <  10; ++j)

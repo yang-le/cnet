@@ -5,6 +5,7 @@
 #include "pooling_layer.h"
 #include "log.h"
 #include "im2col.h"
+#include "common.h"
 
 static void pooling_layer_prepare(layer_t *l)
 {
@@ -150,8 +151,8 @@ static const layer_func_t avg_pooling_func = {
 
 static layer_t * pooling_layer(int c, int iw, int ih, int ow, int oh, int k, int s, int p, const layer_func_t *func)
 {
-	pooling_layer_t *pooling = (pooling_layer_t *)calloc(sizeof(pooling_layer_t) +
-		c * k * k * oh * ow * sizeof(data_val_t), 1);
+	pooling_layer_t *pooling = (pooling_layer_t *)alloc(1, sizeof(pooling_layer_t) +
+		c * k * k * oh * ow * sizeof(data_val_t));
 
 	pooling->l.func = func;
 

@@ -7,10 +7,11 @@
 #include "layer.h"
 #include "log.h"
 #include "random.h"
+#include "common.h"
 
 net_t* net_create(size_t size)
 {
-	net_t *n = (net_t *)calloc(1, sizeof(net_t) + sizeof(layer_t*) * size);
+	net_t *n = (net_t *)alloc(1, sizeof(net_t) + sizeof(layer_t*) * size);
 
 	n->size = size;
 	n->layer = (layer_t **)(n + 1);
@@ -45,9 +46,7 @@ void net_finish(net_t *n, int level)
 	}
 	
 	total_size = (n->layer[0]->in.size + param_size + out_size) * (level + 1);
-	LOG("total: layers %d, params %d, heap size %ld\n", n->size, param_size, total_size * sizeof(data_val_t));
-
-	data_buf = (data_val_t*)calloc(total_size, sizeof(data_val_t));
+	data_buf = (data_val_t*)alloc(total_size, sizeof(data_val_t));
 
 	for(i = 0; i < n->size; ++i)
 	{
@@ -79,6 +78,8 @@ void net_finish(net_t *n, int level)
 
 		//LOG("\n");
 	}
+
+	LOG("total: layers %d, params %d, heap size %ld\n", n->size, param_size, get_alloc_size());
 }
 
 void net_forward(net_t *n)
