@@ -6,12 +6,12 @@
 typedef float data_val_t;
 
 typedef struct {
-	int size;
 	data_val_t *val;
 	data_val_t *grad;
 	data_val_t *m;		// for moment & adam
 	data_val_t *v;		// for adam
-	
+
+	int size;
 	int immutable;
 } data_t;
 

@@ -46,12 +46,16 @@ size_t data_init(data_t *data, data_val_t *buf, int level)
 
 void data_load(FILE *fp, data_t *data)
 {
-    fread(data, sizeof(int), 1, fp);
-    fread(data->val, sizeof(data_val_t), data->size, fp);
+    if (!data->immutable && data->size)
+    {
+        fread(data->val, sizeof(data_val_t), data->size, fp);
+    }
 }
 
 void data_save(const data_t *data, FILE *fp)
 {
-    fwrite(data, sizeof(int), 1, fp);
-    fwrite(data->val, sizeof(data_val_t), data->size, fp);
+    if (!data->immutable && data->size)
+    {
+        fwrite(data->val, sizeof(data_val_t), data->size, fp);
+    }
 }
