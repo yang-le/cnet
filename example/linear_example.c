@@ -6,7 +6,7 @@
 static void feed_data(net_t *n)
 {
 	static int i = 0;
-	
+
 	data_val_t data[4] = {0, 1, 2, 3};
 	data_val_t label[4] = {5, 15, 25, 35};
 
@@ -16,7 +16,7 @@ static void feed_data(net_t *n)
 	++i;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 	int i = 0;
 	float rate = 1e-1;
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 
 	net_add(n, fc_layer(-1, 1, 0));
 	net_add(n, mse_layer(1, 1, -1));
-	
+
 	net_finish(n, TRAIN_DEFAULT);
 
 	for (i = 0; i < 100; ++i)
