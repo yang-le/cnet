@@ -21,7 +21,7 @@ static void feed_data(net_t *n)
 	int j = 0;
 	for (j = 0; j < 28 * 28; ++j)
 		n->layer[0]->in.val[j] = 1.0 * images->data[(i % images->dim[0]) * 28 * 28 + j] / 255;
-	
+
 	for (j = 0; j < 10; ++j)
 		LAST_LAYER(n)->param.val[j] = (labels->data[i % labels->dim[0]] == j);
 
@@ -32,7 +32,7 @@ static int arg_max(data_val_t *data, int n)
 {
 	int i = 0;
 	int max = 0;
-	
+
 	for (i = 0; i < n; ++i)
 		if (data[i] > data[max])
 			max = i;
@@ -40,7 +40,7 @@ static int arg_max(data_val_t *data, int n)
 	return max;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 	int i = 0;
 	int right = 0;
@@ -79,12 +79,12 @@ int main(int argc, char** argv)
 
 	net_param_load(n, "params.bin");
 
-	for (i = 0; i < 1000; ++i)
+	SET_DROP_PROB(dropout, 0.5);
+	for (i = 0; i < 100; ++i)
 	{
 		int j = 0;
 		time_t start = time(NULL);
 
-		SET_DROP_PROB(dropout, 0.5);
 		net_train(n, feed_data, rate, images->dim[0] / 100);
 		LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
 
