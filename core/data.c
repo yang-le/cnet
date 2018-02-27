@@ -1,12 +1,13 @@
 #include "data.h"
+#include "cl.h"
 #include <math.h>
 
 void data_update_adam(data_t *data)
 {
-    #define ALPHA 0.001
-    #define BETA1 0.9
-    #define BETA2 0.999
-    #define EPSILON 1e-8
+#define ALPHA 0.001
+#define BETA1 0.9
+#define BETA2 0.999
+#define EPSILON 1e-8
 
     static int t = 0;
     int j = 0;
@@ -40,11 +41,17 @@ size_t data_init(data_t *data, data_val_t *buf, int level)
 
     data->val = buf;
     buf += data->size;
+#ifdef USE_OPENCL
+    data->val_cl = clCreateBuffer(cl_get_context(0), CL_MEM_READ_WRITE, data->size * sizeof(data_val_t), NULL, NULL);
+#endif
 
     if (level > 0)
     {
         data->grad = buf;
         buf += data->size;
+#ifdef USE_OPENCL
+        data->grad_cl = clCreateBuffer(cl_get_context(0), CL_MEM_READ_WRITE, data->size * sizeof(data_val_t), NULL, NULL);
+#endif
     }
 
     if (level > 1)

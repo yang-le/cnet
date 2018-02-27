@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.9)
 
 project(cnet)
 
-include_directories(core layer)
+include_directories(core layer opencl)
 
-file(GLOB srcs "core/*.c" "layer/*.c")
+file(GLOB core "core/*.c")
+file(GLOB layer "layer/*.c")
 
 option(USE_OPENMP "use openmp to speed up gemm")
 option(USE_BLAS "use blas to speed up gemm")
@@ -28,13 +29,18 @@ endif()
 if(USE_OPENCL)
 find_package(OpenCL REQUIRED)
 if (OpenCL_FOUND)
+add_definitions(-DUSE_OPENCL)
 add_subdirectory(third_party/clBLAS/src)
+file(GLOB opencl "opencl/*.c")
 endif()
 endif()
 
-add_library(cnet ${srcs})
+add_library(cnet ${core} ${layer} ${opencl})
 if(BLAS_FOUND)
 target_link_libraries(cnet ${BLAS_LIBRARIES} ${BLAS_LINKER_FLAGS})
+endif()
+if (OpenCL_FOUND)
+target_link_libraries(cnet clBLAS)
 endif()
 
 add_executable(linear_example example/linear_example.c)

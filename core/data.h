@@ -2,15 +2,22 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef USE_OPENCL
+#include <CL/cl.h>
+#endif
 
 typedef float data_val_t;
 
-typedef struct {
+typedef struct
+{
 	data_val_t *val;
 	data_val_t *grad;
-	data_val_t *m;		// for moment & adam
-	data_val_t *v;		// for adam
-
+	data_val_t *m; // for moment & adam
+	data_val_t *v; // for adam
+#ifdef USE_OPENCL
+	cl_mem val_cl;
+	cl_mem grad_cl;
+#endif
 	int size;
 	int immutable;
 } data_t;
