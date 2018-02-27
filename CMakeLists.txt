@@ -25,6 +25,13 @@ add_definitions(-DUSE_BLAS)
 endif()
 endif()
 
+if(USE_OPENCL)
+find_package(OpenCL REQUIRED)
+if (OpenCL_FOUND)
+add_subdirectory(third_party/clBLAS/src)
+endif()
+endif()
+
 add_library(cnet ${srcs})
 if(BLAS_FOUND)
 target_link_libraries(cnet ${BLAS_LIBRARIES} ${BLAS_LINKER_FLAGS})
