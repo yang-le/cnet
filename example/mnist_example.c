@@ -44,35 +44,37 @@ int main(int argc, char **argv)
 {
 	int i = 0;
 	int right = 0;
+	net_t *n = NULL;
 #if 0
 	float rate = 1;
-	net_t *n = net_create(3);
+	n = net_create(3);
 
 	net_add(n, fc_layer(-28 * 28, 10, 0));
 	net_add(n, softmax_layer(10, 10, 0));
 	net_add(n, cee_layer(10, 0, -10));
 #else
 	float rate = 1e-4;
-	net_t *n = net_create(12);
 	layer_t *dropout = dropout_layer(0, 0);
 
-	net_add(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0));
-	net_add(n, relu_layer(0, 0, 0));
-	net_add(n, max_pooling_layer(32, 28, 28, 14, 14, 2, 0, 0));
+	NET_CREATE(n);
 
-	net_add(n, conv_layer(32, 14, 14, 64, 14, 14, 5, 1, 0));
-	net_add(n, relu_layer(0, 0, 0));
-	net_add(n, max_pooling_layer(64, 14, 14, 7, 7, 2, 0, 0));
+	NET_ADD(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0));
+	NET_ADD(n, relu_layer(0, 0, 0));
+	NET_ADD(n, max_pooling_layer(32, 28, 28, 14, 14, 2, 0, 0));
 
-	net_add(n, fc_layer(0, 1024, 0));
-	net_add(n, relu_layer(0, 0, 0));
-	net_add(n, dropout);
+	NET_ADD(n, conv_layer(32, 14, 14, 64, 14, 14, 5, 1, 0));
+	NET_ADD(n, relu_layer(0, 0, 0));
+	NET_ADD(n, max_pooling_layer(64, 14, 14, 7, 7, 2, 0, 0));
 
-	net_add(n, fc_layer(0, 10, 0));
-	net_add(n, softmax_layer(0, 0, 0));
-	net_add(n, cee_layer(0, 0, 0));
+	NET_ADD(n, fc_layer(0, 1024, 0));
+	NET_ADD(n, relu_layer(0, 0, 0));
+	NET_ADD(n, dropout);
+
+	NET_ADD(n, fc_layer(0, 10, 0));
+	NET_ADD(n, softmax_layer(0, 0, 0));
+	NET_ADD(n, cee_layer(0, 0, 0));
 #endif
-	net_finish(n, TRAIN_ADAM);
+	NET_FINISH(n, TRAIN_ADAM);
 
 	images = mnist_open(argv[1]);
 	labels = mnist_open(argv[2]);

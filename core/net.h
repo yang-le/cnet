@@ -3,12 +3,13 @@
 #include <stdlib.h>
 #include "layer.h"
 
-#define FORWARD_ONLY	0
-#define TRAIN_DEFAULT	1
-#define TRAIN_MOMENT	2
-#define TRAIN_ADAM		3
+#define FORWARD_ONLY 0
+#define TRAIN_DEFAULT 1
+#define TRAIN_MOMENT 2
+#define TRAIN_ADAM 3
 
-typedef struct {
+typedef struct
+{
 	layer_t **layer;
 	int size;
 	float rate;
@@ -20,7 +21,28 @@ typedef void feed_func_t(net_t *n);
 //#define FIRST_LAYER(n) ((n)->layer[0])
 #define LAST_LAYER(n) ((n)->layer[(n)->size - 1])
 
-net_t* net_create(size_t size);
+#define NET_CREATE(n) \
+	{                 \
+		int _cnt = 0; \
+		n = NULL;     \
+	_start:           \
+		if (_cnt)     \
+		n = net_create(_cnt)
+
+#define NET_ADD(n, l)  \
+	if (n)             \
+		net_add(n, l); \
+	else               \
+		++_cnt
+
+#define NET_FINISH(n, level)  \
+	if (n)                    \
+		net_finish(n, level); \
+	else                      \
+		goto _start;          \
+	}
+
+net_t *net_create(size_t size);
 void net_add(net_t *n, layer_t *l);
 void net_finish(net_t *n, int level);
 void net_destroy(net_t *n);
