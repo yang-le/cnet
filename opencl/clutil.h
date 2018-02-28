@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 
-cl_int getPlatforms(cl_platform_id **platforms, cl_uint *num);
+cl_int getPlatformIDs(cl_platform_id **platforms, cl_uint *num);
 char* getPlatformName(cl_platform_id platform);
 cl_int getDevices(cl_platform_id platform, cl_device_type type, cl_device_id **devices, cl_uint *num);
 char* getDeviceName(cl_device_id device);

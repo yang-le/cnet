@@ -122,6 +122,7 @@ int main(int argc, char **argv)
 	mnist_close(images);
 
 	net_destroy(n);
+	cl_deinit();
 
 	return 0;
 }

@@ -9,4 +9,4 @@
 #endif
 
 void* alloc(size_t n, size_t size);
-size_t get_alloc_size();
+size_t get_alloc_size(void);

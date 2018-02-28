@@ -92,7 +92,7 @@ int getPlatformDeviceNum(cl_platform_id platform)
 	return num;
 }
 
-cl_int getPlatforms(cl_platform_id **platforms, cl_uint *num)
+cl_int getPlatformIDs(cl_platform_id **platforms, cl_uint *num)
 {
 	cl_int clRet = 0;
 

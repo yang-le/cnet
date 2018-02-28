@@ -1,17 +1,19 @@
 #include <stdio.h>
 #include "clutil.h"
+#include "clBLAS.h"
 
 static cl_uint num_platforms = 0;
 static cl_platform_id *platforms = NULL;
 static cl_uint *num_devices = 0;
 static cl_device_id **devices = NULL;
 static cl_context *contexts = NULL;
+static cl_command_queue **queues = NULL;
 
-void cl_init()
+cl_int cl_init(void)
 {
     cl_int clRet = 0;
 
-    clRet = getPlatforms(&platforms, &num_platforms);
+    clRet = getPlatformIDs(&platforms, &num_platforms);
     if (clRet != CL_SUCCESS)
     {
         printf("getPlatforms failed, err is %d\n", clRet);
@@ -41,6 +43,13 @@ void cl_init()
         return CL_OUT_OF_HOST_MEMORY;
     }
 
+    queues = (cl_command_queue **)calloc(num_platforms, sizeof(cl_command_queue *));
+    if (NULL == queues)
+    {
+        printf("alloc mem for queues failed!\n");
+        return CL_OUT_OF_HOST_MEMORY;
+    }
+
     for (int i = 0; i < num_platforms; ++i)
     {
         char *name = getPlatformName(platforms[i]);
@@ -56,6 +65,13 @@ void cl_init()
         {
             printf("getDevices failed, err is %d\n", clRet);
             continue;
+        }
+
+        queues[i] = (cl_command_queue *)calloc(num_devices[i], sizeof(cl_command_queue));
+        if (NULL == queues[i])
+        {
+            printf("alloc mem for queues failed!\n");
+            return CL_OUT_OF_HOST_MEMORY;
         }
 
         for (int j = 0; j < num_devices[i]; ++j)
@@ -83,18 +99,42 @@ void cl_init()
         {
             printf("clCreateContextFromType failed, ret = %d\n", clRet);
         }
+
+        for (int j = 0; j < num_devices[i]; ++j)
+        {
+            queues[i][j] = clCreateCommandQueue(contexts[i], devices[i][j], 0, &clRet);
+            if (clRet != CL_SUCCESS)
+            {
+                printf("clCreateCommandQueue failed, ret = %d\n", clRet);
+            }
+        }
     }
+
+    return clblasSetup();
 }
 
-void cl_deinit()
+void cl_deinit(void)
 {
+    clblasTeardown();
+
     free(contexts);
     free(num_devices);
+    for (int i = 0; i < num_platforms; ++i)
+    {
+        free(devices[i]);
+        free(queues[i]);
+    }
     free(devices);
+    free(queues);
     free(platforms);
 }
 
-cl_context cl_get_context(int id)
+cl_context cl_get_context(int plat)
 {
-    return contexts[id];
+    return contexts[plat];
+}
+
+cl_command_queue cl_get_queues(int plat, int dev)
+{
+    return queues[plat][dev];
 }

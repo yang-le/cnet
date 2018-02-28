@@ -8,16 +8,27 @@
 
 typedef float data_val_t;
 
+#ifdef USE_OPENCL
+typedef struct
+{
+	cl_mem buf;
+	void *p;
+} cl_data_val_t;
+#endif
+
 typedef struct
 {
 	data_val_t *val;
+#ifdef USE_OPENCL
+	cl_data_val_t clval;
+#endif
 	data_val_t *grad;
+#ifdef USE_OPENCL
+	cl_data_val_t clgrad;
+#endif
 	data_val_t *m; // for moment & adam
 	data_val_t *v; // for adam
-#ifdef USE_OPENCL
-	cl_mem val_cl;
-	cl_mem grad_cl;
-#endif
+
 	int size;
 	int immutable;
 } data_t;
@@ -27,3 +38,8 @@ void data_update(data_t *data, double rate);
 void data_update_adam(data_t *data);
 void data_load(FILE *fp, data_t *data);
 void data_save(const data_t *data, FILE *fp);
+
+#ifdef USE_OPENCL
+void cl_data_map(cl_data_val_t *data, int size);
+void cl_data_unmap(cl_data_val_t *data);
+#endif
