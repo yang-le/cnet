@@ -137,7 +137,7 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
     {
         for (j = 0; j < N; ++j)
         {
-            *C[i * ldc + j] *= BETA;
+            (*C)[i * ldc + j] *= BETA;
         }
     }
     if (!TA && !TB)

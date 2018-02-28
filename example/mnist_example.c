@@ -53,9 +53,9 @@ int main(int argc, char **argv)
 	net_add(n, cee_layer(10, 0, -10));
 #else
 	float rate = 1e-4;
-
+#ifdef USE_OPENCL
 	cl_init();
-
+#endif
 	net_t *n = net_create(12);
 	layer_t *dropout = dropout_layer(0, 0);
 
@@ -122,7 +122,8 @@ int main(int argc, char **argv)
 	mnist_close(images);
 
 	net_destroy(n);
+#ifdef USE_OPENCL
 	cl_deinit();
-
+#endif
 	return 0;
 }
