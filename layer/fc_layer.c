@@ -29,11 +29,8 @@ static void fc_layer_forward(layer_t *l)
 	int m = 1;
 	int k = l->in.size;
 	int n = l->out.size;
-	float *a = l->in.val;
-	float *b = l->param.val;
-	float *c = l->out.val;
 
-	gemm(0, 1, m, n, k, 1, a, k, b, k, 0, c, n);
+	gemm(0, 1, m, n, k, 1, &l->in.val, k, &l->param.val, k, 0, &l->out.val, n);
 
 	for (i = 0; i < l->out.size; ++i)
 	{
@@ -48,20 +45,14 @@ static void fc_layer_backward(layer_t *l)
 	int m = l->out.size;
 	int k = 1;
 	int n = l->in.size;
-	float *a = l->out.grad;
-	float *b = l->in.val;
-	float *c = l->param.grad;
 
-	gemm(1, 0, m, n, k, 1, a, m, b, n, 1, c, n);
+	gemm(1, 0, m, n, k, 1, &l->out.grad, m, &l->in.val, n, 1, &l->param.grad, n);
 
 	m = 1;
 	k = l->out.size;
 	n = l->in.size;
-	a = l->out.grad;
-	b = l->param.val;
-	c = l->in.grad;
 
-	gemm(0, 0, m, n, k, 1, a, k, b, n, 0, c, n);
+	gemm(0, 0, m, n, k, 1, &l->out.grad, k, &l->param.val, n, 0, &l->in.grad, n);
 
 	for (i = 0; i < l->out.size; ++i)
 	{

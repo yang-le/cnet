@@ -1,5 +1,8 @@
 #include <string.h>
 #include <time.h>
+#ifdef USE_OPENCL
+#include "clhelper.h"
+#endif
 #include "mnist.h"
 #include "net.h"
 #include "log.h"
@@ -54,6 +57,11 @@ int main(int argc, char **argv)
 	net_add(n, cee_layer(10, 0, -10));
 #else
 	float rate = 1e-4;
+
+#ifdef USE_OPENCL
+	cl_init();
+#endif
+
 	layer_t *dropout = dropout_layer(0, 0);
 
 	NET_CREATE(n);
@@ -121,6 +129,8 @@ int main(int argc, char **argv)
 	mnist_close(images);
 
 	net_destroy(n);
-
+#ifdef USE_OPENCL
+	cl_deinit();
+#endif
 	return 0;
 }

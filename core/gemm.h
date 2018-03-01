@@ -1,7 +1,9 @@
 #pragma once
 
-void gemm(int TA, int TB, int M, int N, int K, float ALPHA, 
-        float *A, int lda, 
-        float *B, int ldb,
-        float BETA,
-        float *C, int ldc);
+#include "data.h"
+
+void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
+          data_val_t **A, int lda,
+          data_val_t **B, int ldb,
+          float BETA,
+          data_val_t **C, int ldc);
