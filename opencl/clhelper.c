@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include "clutil.h"
-#include "clBLAS.h"
 
 static cl_uint num_platforms = 0;
 static cl_platform_id *platforms = NULL;
