@@ -73,7 +73,7 @@ static void max_pooling_layer_forward(layer_t *l)
 	int pool_size = pooling->k * pooling->k;
 	int out_size = pooling->oh * pooling->ow;
 
-	im2col(l->in.val, pooling->ic, pooling->ih, pooling->iw, pooling->k, pooling->s, pooling->p, pooling->col.val);
+	im2col(&l->in.val, pooling->ic, pooling->ih, pooling->iw, pooling->k, pooling->s, pooling->p, &pooling->col.val);
 
 	for (k = 0; k < channels; ++k)
 	{
@@ -123,7 +123,7 @@ static void max_pooling_layer_backward(layer_t *l)
 	}
 
 	memset(l->in.grad, 0, l->in.size * sizeof(l->in.grad[0]));
-	col2im(pooling->col.grad, pooling->ic, pooling->ih, pooling->iw, pooling->k, pooling->s, pooling->p, l->in.grad);
+	col2im(&pooling->col.grad, pooling->ic, pooling->ih, pooling->iw, pooling->k, pooling->s, pooling->p, &l->in.grad);
 }
 
 static void avg_pooling_layer_forward(layer_t *l)

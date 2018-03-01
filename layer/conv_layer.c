@@ -63,12 +63,9 @@ static void conv_layer_forward(layer_t *l)
 	int m = conv->oc;
 	int k = conv->ic * conv->k * conv->k;
 	int n = conv->oh * conv->ow;
-	data_val_t **a = &l->param.val;
-	data_val_t **b = &conv->col.val;
-	data_val_t **c = &l->out.val;
 
-	im2col(l->in.val, conv->ic, conv->ih, conv->iw, conv->k, conv->s, conv->p, conv->col.val);
-	gemm(0, 0, m, n, k, 1, a, k, b, n, 0, c, n);
+	im2col(&l->in.val, conv->ic, conv->ih, conv->iw, conv->k, conv->s, conv->p, &conv->col.val);
+	gemm(0, 0, m, n, k, 1, &l->param.val, k, &conv->col.val, n, 0, &l->out.val, n);
 
 	for (i = 0; i < m; ++i)
 		for (j = 0; j < n; ++j)
@@ -85,22 +82,17 @@ static void conv_layer_backward(layer_t *l)
 	int m = conv->oc;
 	int n = conv->ic * conv->k * conv->k;
 	int k = conv->oh * conv->ow;
-	data_val_t **a = &l->out.grad;
-	data_val_t **b = &conv->col.val;
-	data_val_t **c = &l->param.grad;
 
-	gemm(0, 1, m, n, k, 1, a, k, b, k, 1, c, n);
+	gemm(0, 1, m, n, k, 1, &l->out.grad, k, &conv->col.val, k, 1, &l->param.grad, n);
 
 	m = conv->ic * conv->k * conv->k;
 	n = conv->oh * conv->ow;
 	k = conv->oc;
-	a = &l->param.val;
-	b = &l->out.grad;
-	c = &conv->col.grad;
 
-	gemm(1, 0, m, n, k, 1, a, m, b, n, 0, c, n);
+	gemm(1, 0, m, n, k, 1, &l->param.val, m, &l->out.grad, n, 0, &conv->col.grad, n);
+	
 	memset(l->in.grad, 0, l->in.size * sizeof(l->in.grad[0]));
-	col2im(conv->col.grad, conv->ic, conv->ih, conv->iw, conv->k, conv->s, conv->p, l->in.grad);
+	col2im(&conv->col.grad, conv->ic, conv->ih, conv->iw, conv->k, conv->s, conv->p, &l->in.grad);
 
 	for (i = 0; i < k; ++i)
 		for (j = 0; j < n; ++j)

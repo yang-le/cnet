@@ -1,9 +1,11 @@
 #pragma once
 
-void im2col(float* data_im,
-        int channels, int height, int width,
-        int ksize, int stride, int pad, float* data_col);
+#include "data.h"
 
-void col2im(float* data_col,
+void im2col(data_val_t** data_im,
         int channels, int height, int width,
-        int ksize, int stride, int pad, float* data_im);
+        int ksize, int stride, int pad, data_val_t** data_col);
+
+void col2im(data_val_t** data_col,
+        int channels, int height, int width,
+        int ksize, int stride, int pad, data_val_t** data_im);
