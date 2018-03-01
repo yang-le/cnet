@@ -1,5 +1,8 @@
 #include <string.h>
 #include <time.h>
+#ifdef USE_OPENCL
+#include "clhelper.h"
+#endif
 #include "mnist.h"
 #include "net.h"
 #include "log.h"

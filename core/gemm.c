@@ -1,6 +1,10 @@
-#if defined(USE_OPENCL)
-#include "clBLAS.h"
+#ifdef USE_OPENCL
 #include "clhelper.h"
+#endif
+#if defined(USE_CLBLAST)
+#include "clblast_c.h"
+#elif defined(USE_CLBLAS)
+
 #elif defined(USE_BLAS)
 #include <cblas.h>
 #endif
@@ -111,7 +115,15 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
     cl_data_unmap(clA);
     cl_data_unmap(clB);
     cl_data_unmap(clC);
-
+#if defined(USE_CLBLAST)
+    CLBlastSgemm(
+        CLBlastLayoutRowMajor,
+        TA ? CLBlastTransposeYes : CLBlastTransposeNo,
+        TB ? CLBlastTransposeYes : CLBlastTransposeNo,
+        M, N, K, ALPHA, clA->buf, 0, lda, clB->buf, 0, ldb, BETA, clC->buf, 0, ldc,
+        &queue, &event
+    );
+#elif defined(USE_CLBLAS)
     clblasSgemm(
         clblasRowMajor,
         TA ? clblasTrans : clblasNoTrans,
@@ -119,6 +131,7 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
         M, N, K, ALPHA, clA->buf, 0, lda, clB->buf, 0, ldb, BETA, clC->buf, 0, ldc,
         1, &queue, 0, NULL, &event
     );
+#endif
     clWaitForEvents(1, &event);
 
     cl_data_map(clA, M * K);

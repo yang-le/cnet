@@ -110,13 +110,11 @@ cl_int cl_init(void)
         }
     }
 
-    return clblasSetup();
+    return clRet;
 }
 
 void cl_deinit(void)
 {
-    clblasTeardown();
-
     free(contexts);
     free(num_devices);
     for (int i = 0; i < num_platforms; ++i)
