@@ -4,7 +4,7 @@
 #if defined(USE_CLBLAST)
 #include "clblast_c.h"
 #elif defined(USE_CLBLAS)
-
+#include "clBLAS.h"
 #elif defined(USE_BLAS)
 #include <cblas.h>
 #endif
