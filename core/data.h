@@ -3,7 +3,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef USE_OPENCL
-#include <CL/cl.h>
+#include "clhelper.h"
+#endif
+#ifdef USE_CUDA
+#include "cudahelper.h"
 #endif
 
 typedef float data_val_t;
@@ -19,11 +22,15 @@ typedef struct
 typedef struct
 {
 	data_val_t *val;
-#ifdef USE_OPENCL
+#ifdef USE_CUDA
+	data_val_t *cuval;
+#elif defined(USE_OPENCL)
 	cl_data_val_t clval;
 #endif
 	data_val_t *grad;
-#ifdef USE_OPENCL
+#ifdef USE_CUDA
+	data_val_t *cugrad;
+#elif defined(USE_OPENCL)
 	cl_data_val_t clgrad;
 #endif
 	data_val_t *m; // for moment & adam

@@ -108,11 +108,21 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
           data_val_t **C, int ldc)
 {
 #ifdef USE_CUDA
-    cublasXtSgemm(
+    data_val_t **cuA = A + 1;
+    data_val_t **cuB = B + 1;
+    data_val_t **cuC = C + 1;
+
+    cublasSetVector(M * K, sizeof(data_val_t), *A, 1, *cuA, 1);
+    cublasSetVector(K * N, sizeof(data_val_t), *B, 1, *cuB, 1);
+    cublasSetVector(M * N, sizeof(data_val_t), *C, 1, *cuC, 1);
+
+    cublasSgemm(
         cublas_handle(),
-        TA ? CUBLAS_OP_T : CUBLAS_OP_N,
         TB ? CUBLAS_OP_T : CUBLAS_OP_N,
-        M, N, K, &ALPHA, *A, lda, *B, ldb, &BETA, *C, ldc);
+        TA ? CUBLAS_OP_T : CUBLAS_OP_N,
+        N, M, K, &ALPHA, *cuB, ldb, *cuA, lda, &BETA, *cuC, ldc);
+
+    cublasGetVector(M * N, sizeof(data_val_t), *cuC, 1, *C, 1);
 #elif defined(USE_OPENCL)
     cl_event event = NULL;
     cl_command_queue queue = cl_get_queues(0, 0);

@@ -58,7 +58,7 @@ endif()
 
 add_library(cnet ${core} ${layer} ${opencl} ${cuda})
 if (CUDA_FOUND)
-CUDA_ADD_CUBLAS_TO_TARGET(cnet)
+target_link_libraries(cnet ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
 endif()
 if(BLAS_FOUND)
 target_link_libraries(cnet ${BLAS_LIBRARIES} ${BLAS_LINKER_FLAGS})
