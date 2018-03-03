@@ -24,19 +24,23 @@ static void sigmoid_layer_prepare(layer_t *l)
 
 static void sigmoid_layer_forward(layer_t *l)
 {
-	int i = 0;
+	int i = 0, b = 0;
+
+	for (b = 0; b < l->n->batch; ++b)
 	for (i = 0; i < l->out.size; ++i)
 	{
-		l->out.val[i] = 1 / (1 + exp(-l->in.val[i]));
+		l->out.val[b * l->out.size + i] = 1 / (1 + exp(-l->in.val[b * l->in.size + i]));
 	}
 }
 
 static void sigmoid_layer_backward(layer_t *l)
 {
-	int i = 0;
+	int i = 0, b = 0;
+
+	for (b = 0; b < l->n->batch; ++b)
 	for (i = 0; i < l->in.size; ++i)
 	{
-		l->in.grad[i] = l->out.grad[i] * l->out.val[i] * (1 - l->out.val[i]);
+		l->in.grad[b * l->in.size + i] = l->out.grad[b * l->out.size + i] * l->out.val[b * l->out.size + i] * (1 - l->out.val[b * l->out.size + i]);
 	}
 }
 

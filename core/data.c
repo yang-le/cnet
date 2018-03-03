@@ -46,20 +46,21 @@ void cl_data_unmap(cl_data_val_t *data)
 }
 #endif
 
-size_t data_init(data_t *data, data_val_t *buf, int level)
+size_t data_init(data_t *data, data_val_t *buf, int level, int batch)
 {
     data_val_t *start = buf;
+    size_t data_size = data->size * batch;
 
     data->val = buf;
     data->grad = data->val;
-    buf += data->size;
+    buf += data_size;
 #ifdef USE_CUDA
-    cudaMalloc((void **)&data->cuval, data->size * sizeof(data_val_t));
+    cudaMalloc((void **)&data->cuval, data_size * sizeof(data_val_t));
 
     data->cugrad = data->cuval;
 #elif defined(USE_OPENCL)
-    data->clval.buf = clCreateBuffer(cl_get_context(0), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, data->size * sizeof(data_val_t), data->val, NULL);
-    cl_data_map(&data->clval, data->size);
+    data->clval.buf = clCreateBuffer(cl_get_context(0), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, data_size * sizeof(data_val_t), data->val, NULL);
+    cl_data_map(&data->clval, data_size);
 
     data->clgrad.buf = data->clval.buf;
 #endif
@@ -67,25 +68,25 @@ size_t data_init(data_t *data, data_val_t *buf, int level)
     if (level > 0)
     {
         data->grad = buf;
-        buf += data->size;
+        buf += data_size;
 #ifdef USE_CUDA
-        cudaMalloc((void **)&data->cugrad, data->size * sizeof(data_val_t));
+        cudaMalloc((void **)&data->cugrad, data_size * sizeof(data_val_t));
 #elif defined(USE_OPENCL)
-        data->clgrad.buf = clCreateBuffer(cl_get_context(0), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, data->size * sizeof(data_val_t), data->grad, NULL);
-        cl_data_map(&data->clgrad, data->size);
+        data->clgrad.buf = clCreateBuffer(cl_get_context(0), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, data_size * sizeof(data_val_t), data->grad, NULL);
+        cl_data_map(&data->clgrad, data_size);
 #endif
     }
 
     if (level > 1)
     {
         data->m = buf;
-        buf += data->size;
+        buf += data_size;
     }
 
     if (level > 2)
     {
         data->v = buf;
-        buf += data->size;
+        buf += data_size;
     }
 
     return buf - start;

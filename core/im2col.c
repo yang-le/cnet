@@ -17,9 +17,9 @@ static float im2col_get_pixel(float *im, int height, int width, int channels,
     return im[col + width*(row + height*channel)];
 }
 
-void im2col(data_val_t** data_im,
+void im2col(data_val_t** data_im, int off_im,
      int channels,  int height,  int width,
-     int ksize,  int stride, int pad, data_val_t** data_col) 
+     int ksize,  int stride, int pad, data_val_t** data_col, int off_col) 
 {
     int channels_col = channels * ksize * ksize;
     int height_col = (height + 2*pad - ksize) / stride + 1;
@@ -37,7 +37,7 @@ void im2col(data_val_t** data_im,
     CLBlastSim2col(
         channels, height, width,
         ksize, ksize, pad, pad, stride, stride, 0, 0,
-        clim->buf, 0, clcol->buf, 0,
+        clim->buf, off_im, clcol->buf, off_col,
         &queue, &event
     );
     clWaitForEvents(1, &event);
@@ -55,7 +55,7 @@ void im2col(data_val_t** data_im,
                 int im_row = h_offset + h * stride;
                 int im_col = w_offset + w * stride;
                 int col_index = (c * height_col + h) * width_col + w;
-                (*data_col)[col_index] = im2col_get_pixel(*data_im, height, width, channels,
+                (*data_col + off_col)[col_index] = im2col_get_pixel(*data_im + off_im, height, width, channels,
                         im_row, im_col, c_im, pad);
             }
         }
@@ -76,9 +76,9 @@ static void col2im_add_pixel(float *im, int height, int width, int channels,
     im[col + width*(row + height*channel)] += val;
 }
 
-void col2im(data_val_t** data_col,
+void col2im(data_val_t** data_col, int off_col,
          int channels,  int height,  int width,
-         int ksize,  int stride, int pad, data_val_t** data_im) 
+         int ksize,  int stride, int pad, data_val_t** data_im, int off_im) 
 {
     int c,h,w;
     int height_col = (height + 2*pad - ksize) / stride + 1;
@@ -94,8 +94,8 @@ void col2im(data_val_t** data_col,
                 int im_row = h_offset + h * stride;
                 int im_col = w_offset + w * stride;
                 int col_index = (c * height_col + h) * width_col + w;
-                double val = (*data_col)[col_index];
-                col2im_add_pixel(*data_im, height, width, channels,
+                double val = (*data_col + off_col)[col_index];
+                col2im_add_pixel(*data_im + off_im, height, width, channels,
                         im_row, im_col, c_im, pad, val);
             }
         }

@@ -1,28 +1,35 @@
 #pragma once
 
 #include "data.h"
+#include "net.h"
 
 struct layer;
+struct net;
 
-typedef struct {
+typedef struct
+{
 	void (*prepare)(struct layer *l);
 	void (*forward)(struct layer *l);
 	void (*backward)(struct layer *l);
 } layer_func_t;
 
-typedef struct layer {
+typedef struct layer
+{
 	const layer_func_t *func;
 
 	data_t in;
 	data_t out;
 	data_t param;
+
+	struct net *n;
 } layer_t;
 
 #define PREPARE(l) ((l)->func->prepare((l)))
 #define FORWARD(l) ((l)->func->forward((l)))
 #define BACKWARD(l) ((l)->func->backward((l)))
 
-enum {
+enum
+{
 	FC = 0,
 	RELU,
 	SIGMOID,
@@ -32,5 +39,5 @@ enum {
 	LAYER_MAX
 };
 
-layer_t* layer(int in, int out, int param, const layer_func_t *func);
-size_t layer_data_init(layer_t *l, data_val_t *buf, int level);
+layer_t *layer(int in, int out, int param, const layer_func_t *func);
+size_t layer_data_init(layer_t *l, data_val_t *buf);

@@ -24,14 +24,17 @@ static void feed_data(net_t *n)
 {
 	static int i = 0;
 
-	int j = 0;
-	for (j = 0; j < 28 * 28; ++j)
-		n->layer[0]->in.val[j] = 1.0 * images->data[(i % images->dim[0]) * 28 * 28 + j] / 255;
+	for (int b = 0; b < n->batch; ++b)
+	{
+		int j = 0;
+		for (j = 0; j < 28 * 28; ++j)
+			n->layer[0]->in.val[b * 28 * 28 + j] = 1.0 * images->data[(i % images->dim[0]) * 28 * 28 + j] / 255;
 
-	for (j = 0; j < 10; ++j)
-		LAST_LAYER(n)->param.val[j] = (labels->data[i % labels->dim[0]] == j);
+		for (j = 0; j < 10; ++j)
+			LAST_LAYER(n)->param.val[b * 10 + j] = (labels->data[i % labels->dim[0]] == j);
 
-	++i;
+		++i;
+	}
 }
 
 static int arg_max(data_val_t *data, int n)
@@ -70,7 +73,7 @@ int main(int argc, char **argv)
 
 	layer_t *dropout = dropout_layer(0, 0);
 
-	NET_CREATE(n);
+	NET_CREATE(n, TRAIN_ADAM, 600);
 
 	NET_ADD(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0));
 	NET_ADD(n, relu_layer(0, 0, 0));
@@ -88,7 +91,7 @@ int main(int argc, char **argv)
 	NET_ADD(n, softmax_layer(0, 0, 0));
 	NET_ADD(n, cee_layer(0, 0, 0));
 #endif
-	NET_FINISH(n, TRAIN_ADAM);
+	NET_FINISH(n);
 
 	images = mnist_open(argv[1]);
 	labels = mnist_open(argv[2]);
@@ -101,7 +104,7 @@ int main(int argc, char **argv)
 		int j = 0;
 		time_t start = time(NULL);
 
-		net_train(n, feed_data, rate, images->dim[0] / 100);
+		net_train(n, feed_data, rate);
 		LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
 
 		//LOG("output ");

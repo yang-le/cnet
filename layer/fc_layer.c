@@ -25,38 +25,42 @@ static void fc_layer_prepare(layer_t *l)
 static void fc_layer_forward(layer_t *l)
 {
 	int i = 0;
+	int b = 0;
 
-	int m = 1;
+	int m = l->n->batch;
 	int k = l->in.size;
 	int n = l->out.size;
 
-	gemm(0, 1, m, n, k, 1, &l->in.val, k, &l->param.val, k, 0, &l->out.val, n);
+	gemm(0, 1, m, n, k, 1, &l->in.val, 0, k, &l->param.val, 0, k, 0, &l->out.val, 0, n);
 
+	for (b = 0; b < l->n->batch; ++b)
 	for (i = 0; i < l->out.size; ++i)
 	{
-		l->out.val[i] += l->param.val[l->out.size * l->in.size + i];
+		l->out.val[b * l->out.size + i] += l->param.val[l->out.size * l->in.size + i];
 	}
 }
 
 static void fc_layer_backward(layer_t *l)
 {
 	int i = 0;
+	int b = 0;
 
 	int m = l->out.size;
-	int k = 1;
+	int k = l->n->batch;
 	int n = l->in.size;
 
-	gemm(1, 0, m, n, k, 1, &l->out.grad, m, &l->in.val, n, 1, &l->param.grad, n);
+	gemm(1, 0, m, n, k, 1, &l->out.grad, 0, m, &l->in.val, 0, n, 1, &l->param.grad, 0, n);
 
-	m = 1;
+	m = l->n->batch;
 	k = l->out.size;
 	n = l->in.size;
 
-	gemm(0, 0, m, n, k, 1, &l->out.grad, k, &l->param.val, n, 0, &l->in.grad, n);
+	gemm(0, 0, m, n, k, 1, &l->out.grad, 0, k, &l->param.val, 0, n, 0, &l->in.grad, 0, n);
 
+	for (b = 0; b < l->n->batch; ++b)
 	for (i = 0; i < l->out.size; ++i)
 	{
-		l->param.grad[l->out.size * l->in.size + i] += l->out.grad[i];
+		l->param.grad[l->out.size * l->in.size + i] += l->out.grad[b * l->out.size + i];
 	}
 }
 

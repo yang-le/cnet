@@ -17,13 +17,13 @@ layer_t* layer(int in, int out, int param, const layer_func_t *func)
 	return l;
 }
 
-size_t layer_data_init(layer_t *l, data_val_t *buf, int level)
+size_t layer_data_init(layer_t *l, data_val_t *buf)
 {
 	data_val_t *start = buf;
 
-	buf += data_init(&l->in, buf, level);
-	buf +=  data_init(&l->param, buf, level);
-/*  buf += */data_init(&l->out, buf, level);
+	buf += data_init(&l->in, buf, l->n->level, l->n->batch);
+	buf +=  data_init(&l->param, buf, l->n->level, 1);
+/*  buf += */data_init(&l->out, buf, l->n->level, l->n->batch);
 
 	return buf - start;
 }

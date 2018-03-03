@@ -29,32 +29,36 @@ static void dropout_layer_prepare(layer_t *l)
 
 static void dropout_layer_forward(layer_t *l)
 {
-	int i = 0;
+	int i = 0, b = 0;
 	dropout_layer_t *drop = (dropout_layer_t*)l;
 
-	if (drop->prob > 0)
-		uniform(l->param.val, l->param.size, 0, 1);
-
-	for (i = 0; i < l->in.size; ++i)
+	for (b = 0; b < l->n->batch; ++b)
 	{
-		if (l->param.val[i] < drop->prob)
-			l->out.val[i] = 0;
-		else
-			l->out.val[i] = l->in.val[i] / (1 - drop->prob);
+		if (drop->prob > 0)
+			uniform(l->param.val, l->param.size, 0, 1);
+
+		for (i = 0; i < l->in.size; ++i)
+		{
+			if (l->param.val[i] < drop->prob)
+				l->out.val[b * l->in.size + i] = 0;
+			else
+				l->out.val[b * l->in.size + i] = l->in.val[b * l->in.size + i] / (1 - drop->prob);
+		}
 	}
 }
 
 static void dropout_layer_backward(layer_t *l)
 {
-	int i = 0;
+	int i = 0, b = 0;
 	dropout_layer_t *drop = (dropout_layer_t*)l;
 	
+	for (b = 0; b < l->n->batch; ++b)
 	for (i = 0; i < l->in.size; ++i)
 	{
 		if (l->param.val[i] < drop->prob)
-			l->in.grad[i] = 0;
+			l->in.grad[b * l->in.size + i] = 0;
 		else
-			l->in.grad[i] = l->out.grad[i] / (1 - drop->prob);
+			l->in.grad[b * l->in.size + i] = l->out.grad[b * l->in.size + i] / (1 - drop->prob);
 	}
 }
 
