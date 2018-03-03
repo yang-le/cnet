@@ -7,7 +7,7 @@ include_directories(core layer opencl cuda)
 file(GLOB core "core/*.c")
 file(GLOB layer "layer/*.c")
 
-option(USE_OPENMP "use openmp to speed up gemm" ON)
+option(USE_OPENMP "use openmp to speed up gemm" OFF)
 option(USE_BLAS "use blas to speed up gemm" OFF)
 option(USE_CLBLAS "use clblas to speed up gemm" OFF)
 option(USE_CLBLAST "use clblast to speed up gemm" OFF)
