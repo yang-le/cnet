@@ -1,3 +1,6 @@
+#ifdef USE_CUDA
+#include "cudahelper.h"
+#endif
 #ifdef USE_OPENCL
 #include "clhelper.h"
 #endif
@@ -104,7 +107,23 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
           float BETA,
           data_val_t **C, int ldc)
 {
-#if defined(USE_OPENCL)
+#ifdef USE_CUDA
+    data_val_t **cuA = A + 1;
+    data_val_t **cuB = B + 1;
+    data_val_t **cuC = C + 1;
+
+    cublasSetVector(M * K, sizeof(data_val_t), *A, 1, *cuA, 1);
+    cublasSetVector(K * N, sizeof(data_val_t), *B, 1, *cuB, 1);
+    cublasSetVector(M * N, sizeof(data_val_t), *C, 1, *cuC, 1);
+
+    cublasSgemm(
+        cublas_handle(),
+        TB ? CUBLAS_OP_T : CUBLAS_OP_N,
+        TA ? CUBLAS_OP_T : CUBLAS_OP_N,
+        N, M, K, &ALPHA, *cuB, ldb, *cuA, lda, &BETA, *cuC, ldc);
+
+    cublasGetVector(M * N, sizeof(data_val_t), *cuC, 1, *C, 1);
+#elif defined(USE_OPENCL)
     cl_event event = NULL;
     cl_command_queue queue = cl_get_queues(0, 0);
 
@@ -121,16 +140,14 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
         TA ? CLBlastTransposeYes : CLBlastTransposeNo,
         TB ? CLBlastTransposeYes : CLBlastTransposeNo,
         M, N, K, ALPHA, clA->buf, 0, lda, clB->buf, 0, ldb, BETA, clC->buf, 0, ldc,
-        &queue, &event
-    );
+        &queue, &event);
 #elif defined(USE_CLBLAS)
     clblasSgemm(
         clblasRowMajor,
         TA ? clblasTrans : clblasNoTrans,
         TB ? clblasTrans : clblasNoTrans,
         M, N, K, ALPHA, clA->buf, 0, lda, clB->buf, 0, ldb, BETA, clC->buf, 0, ldc,
-        1, &queue, 0, NULL, &event
-    );
+        1, &queue, 0, NULL, &event);
 #endif
     clWaitForEvents(1, &event);
 
@@ -142,8 +159,7 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
         CblasRowMajor,
         TA ? CblasTrans : CblasNoTrans,
         TB ? CblasTrans : CblasNoTrans,
-        M, N, K, ALPHA, *A, lda, *B, ldb, BETA, *C, ldc
-    );
+        M, N, K, ALPHA, *A, lda, *B, ldb, BETA, *C, ldc);
 #else
     int i, j;
     for (i = 0; i < M; ++i)

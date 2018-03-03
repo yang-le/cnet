@@ -3,6 +3,9 @@
 #ifdef USE_OPENCL
 #include "clhelper.h"
 #endif
+#ifdef USE_CUDA
+#include "cudahelper.h"
+#endif
 #include "mnist.h"
 #include "net.h"
 #include "log.h"
@@ -60,6 +63,9 @@ int main(int argc, char **argv)
 
 #ifdef USE_OPENCL
 	cl_init();
+#endif
+#ifdef USE_CUDA
+	cublas_init();
 #endif
 
 	layer_t *dropout = dropout_layer(0, 0);
@@ -129,6 +135,9 @@ int main(int argc, char **argv)
 	mnist_close(images);
 
 	net_destroy(n);
+#ifdef USE_CUDA
+	cublas_deinit();
+#endif
 #ifdef USE_OPENCL
 	cl_deinit();
 #endif
