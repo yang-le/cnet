@@ -98,6 +98,8 @@ cnet is a neural network for C programmers.
 - 更多种类的层
 - ...
 
+当前版本的性能信息请参考[wiki](https://github.com/yang-le/cnet/wiki)
+
 如果你有好的想法、意见、建议，欢迎提交[issue](https://github.com/yang-le/cnet/issues)。
 
 如果你实现了新的层或者训练算法，欢迎分享，Fork并发起[Pull Request](https://github.com/yang-le/cnet/pulls)。
