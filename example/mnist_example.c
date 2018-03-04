@@ -123,14 +123,14 @@ int main(int argc, char **argv)
 	images = mnist_open(argv[3]);
 	labels = mnist_open(argv[4]);
 
-	n->batch = 1;
 	SET_DROP_PROB(dropout, 0);
-	for (i = 0; i < images->dim[0]; ++i)
+	for (i = 0; i < images->dim[0] / n->batch; ++i)
 	{
 		feed_data(n);
 		net_forward(n);
-
-		right += (arg_max(LAST_LAYER(n)->in.val, 10) == arg_max(LAST_LAYER(n)->param.val, 10));
+		
+		for (int b = 0; b < n->batch; ++b)
+			right += (arg_max(&LAST_LAYER(n)->in.val[b * 10], 10) == arg_max(&LAST_LAYER(n)->param.val[b * 10], 10));
 	}
 
 	LOG("accurcy %f\n", 1.0 * right / images->dim[0]);
