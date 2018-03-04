@@ -151,9 +151,9 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
 #endif
     clWaitForEvents(1, &event);
 
-    cl_data_map(clA, M * K);
-    cl_data_map(clB, K * N);
-    cl_data_map(clC, M * N);
+    cl_data_map(clA);
+    cl_data_map(clB);
+    cl_data_map(clC);
 #elif defined(USE_BLAS)
     cblas_sgemm(
         CblasRowMajor,

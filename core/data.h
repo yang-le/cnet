@@ -16,6 +16,7 @@ typedef struct
 {
 	cl_mem buf;
 	void *p;
+	int size;
 } cl_data_val_t;
 #endif
 
@@ -47,6 +48,6 @@ void data_load(FILE *fp, data_t *data);
 void data_save(const data_t *data, FILE *fp);
 
 #ifdef USE_OPENCL
-void cl_data_map(cl_data_val_t *data, int size);
+void cl_data_map(cl_data_val_t *data);
 void cl_data_unmap(cl_data_val_t *data);
 #endif

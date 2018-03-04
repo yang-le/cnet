@@ -123,6 +123,7 @@ int main(int argc, char **argv)
 	images = mnist_open(argv[3]);
 	labels = mnist_open(argv[4]);
 
+	n->batch = 1;
 	SET_DROP_PROB(dropout, 0);
 	for (i = 0; i < images->dim[0]; ++i)
 	{
