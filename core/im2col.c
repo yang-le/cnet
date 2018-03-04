@@ -1,7 +1,3 @@
-#ifdef USE_CLBLAST
-#include "clhelper.h"
-#include "clblast_c.h"
-#endif
 #include "im2col.h"
 
 //see https://github.com/pjreddie/darknet/blob/master/src/im2col.c
@@ -22,30 +18,11 @@ void im2col(data_val_t **data_im, int off_im,
             int channels, int height, int width,
             int ksize, int stride, int pad, data_val_t **data_col, int off_col)
 {
-    int channels_col = channels * ksize * ksize;
+    int c, h, w;
     int height_col = (height + 2 * pad - ksize) / stride + 1;
     int width_col = (width + 2 * pad - ksize) / stride + 1;
-#ifdef USE_CLBLAST
-    cl_event event = NULL;
-    cl_command_queue queue = cl_get_queues(0, 0);
 
-    cl_data_val_t *clim = (cl_data_val_t *)(data_im + 1);
-    cl_data_val_t *clcol = (cl_data_val_t *)(data_col + 1);
-
-    cl_data_unmap(clim);
-    cl_data_unmap(clcol);
-
-    CLBlastSim2col(
-        channels, height, width,
-        ksize, ksize, pad, pad, stride, stride, 0, 0,
-        clim->buf, off_im, clcol->buf, off_col,
-        &queue, &event);
-    clWaitForEvents(1, &event);
-
-    cl_data_map(clim);
-    cl_data_map(clcol);
-#else
-    int c, h, w;
+    int channels_col = channels * ksize * ksize;
     for (c = 0; c < channels_col; ++c)
     {
         int w_offset = c % ksize;
@@ -63,7 +40,6 @@ void im2col(data_val_t **data_im, int off_im,
             }
         }
     }
-#endif
 }
 
 //see https://github.com/pjreddie/darknet/blob/master/src/col2im.c
