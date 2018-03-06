@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 			right += (arg_max(&LAST_LAYER(n)->in.val[b * 10], 10) == arg_max(&LAST_LAYER(n)->extra.val[b * 10], 10));
 	}
 
-	LOG("accurcy %f\n", 1.0 * right / images->dim[0]);
+	LOG("accurcy %f\n", 1.0 * right / (images->dim[0] / n->batch * n->batch));
 
 	mnist_close(labels);
 	mnist_close(images);
