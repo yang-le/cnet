@@ -26,18 +26,6 @@ static void pooling_layer_prepare(layer_t *l)
 		pooling->s = pooling->k;
 	}
 
-	// I have to know c, k, oh, ow
-
-	//if (pooling->oh == 0)
-	//{
-	//	pooling->oh = (pooling->ih + 2 * pooling->p - pooling->k) / pooling->s + 1;
-	//}
-
-	//if (pooling->ow == 0)
-	//{
-	//	pooling->ow = (pooling->iw + 2 * pooling->p - pooling->k) / pooling->s + 1;
-	//}
-
 	if (pooling->ih == 0)
 	{
 		pooling->ih = (pooling->oh - 1) * pooling->s + pooling->k - 2 * pooling->p;
@@ -55,13 +43,12 @@ static void pooling_layer_prepare(layer_t *l)
 
 	l->in.size = pooling->ic * pooling->iw * pooling->ih;
 	l->out.size = pooling->oc * pooling->ow * pooling->oh;
-	l->param.size = 0;
 
 	pooling->col.size = pooling->ic * pooling->k * pooling->k * pooling->oh * pooling->ow;
 	data_init(&pooling->col, (data_val_t *)(pooling + 1), 0, 1);
 
-	LOG("pooling_layer: %d x %d x %d => %d x %d x %d, kernel %d x %d + %d, padding %d, params %d\n",
-		pooling->ic, pooling->iw, pooling->ih, pooling->oc, pooling->ow, pooling->oh, pooling->k, pooling->k, pooling->s, pooling->p, l->param.size);
+	LOG("pooling_layer: %d x %d x %d => %d x %d x %d, kernel %d x %d + %d, padding %d\n",
+		pooling->ic, pooling->iw, pooling->ih, pooling->oc, pooling->ow, pooling->oh, pooling->k, pooling->k, pooling->s, pooling->p);
 }
 
 static void max_pooling_layer_forward(layer_t *l)

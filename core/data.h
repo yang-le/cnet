@@ -38,7 +38,6 @@ typedef struct
 	data_val_t *v; // for adam
 
 	int size;
-	int immutable;
 } data_t;
 
 size_t data_init(data_t *data, data_val_t *buf, int level, int batch);

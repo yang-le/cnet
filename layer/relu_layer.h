@@ -2,4 +2,4 @@
 
 #include "layer.h"
 
-layer_t* relu_layer(int in, int out, int param);
+layer_t *relu_layer(int in);

@@ -11,22 +11,22 @@ static void feed_data(net_t *n)
 	data_val_t label[4] = {0, 1, 1, 0};
 
 	memcpy(n->layer[0]->in.val, data, 8 * sizeof(data_val_t));
-	memcpy(LAST_LAYER(n)->param.val, label, 4 * sizeof(data_val_t));
+	memcpy(LAST_LAYER(n)->extra.val, label, 4 * sizeof(data_val_t));
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 	int i = 0;
 	float rate = 10;
 
 	net_t *n = net_create(5, TRAIN_DEFAULT, 4);
 
-	net_add(n, fc_layer(-2, 2, 0));
-	net_add(n, sigmoid_layer(0, 2, 0));
-	net_add(n, fc_layer(0, 1, 0));
-	net_add(n, sigmoid_layer(0, 1, 0));
-	net_add(n, mse_layer(0, 1, -1));
-	
+	net_add(n, fc_layer(2, 2, FILLER_XAVIER, 0.5, 0));
+	net_add(n, sigmoid_layer(2));
+	net_add(n, fc_layer(2, 1, FILLER_XAVIER, 0.5, 0));
+	net_add(n, sigmoid_layer(1));
+	net_add(n, mse_layer(1));
+
 	net_finish(n);
 
 	for (i = 0; i < 3000; ++i)

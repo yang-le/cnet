@@ -27,12 +27,11 @@ void data_update(data_t *data, double rate)
 {
     int j = 0;
 
-    if (!data->immutable)
-        for (j = 0; j < data->size; ++j)
-        {
-            data->val[j] -= rate * data->grad[j];
-            data->grad[j] = 0;
-        }
+    for (j = 0; j < data->size; ++j)
+    {
+        data->val[j] -= rate * data->grad[j];
+        data->grad[j] = 0;
+    }
 }
 
 #ifdef USE_OPENCL
@@ -132,7 +131,7 @@ size_t data_init(data_t *data, data_val_t *buf, int level, int batch)
 
 void data_load(FILE *fp, data_t *data)
 {
-    if (!data->immutable && data->size)
+    if (data->size)
     {
         fread(data->val, sizeof(data_val_t), data->size, fp);
     }
@@ -140,7 +139,7 @@ void data_load(FILE *fp, data_t *data)
 
 void data_save(const data_t *data, FILE *fp)
 {
-    if (!data->immutable && data->size)
+    if (data->size)
     {
         fwrite(data->val, sizeof(data_val_t), data->size, fp);
     }

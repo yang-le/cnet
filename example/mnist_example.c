@@ -31,7 +31,7 @@ static void feed_data(net_t *n)
 			n->layer[0]->in.val[b * 28 * 28 + j] = 1.0 * images->data[(i % images->dim[0]) * 28 * 28 + j] / 255;
 
 		for (j = 0; j < 10; ++j)
-			LAST_LAYER(n)->param.val[b * 10 + j] = (labels->data[i % labels->dim[0]] == j);
+			LAST_LAYER(n)->extra.val[b * 10 + j] = (labels->data[i % labels->dim[0]] == j);
 
 		++i;
 	}
@@ -75,21 +75,21 @@ int main(int argc, char **argv)
 
 	NET_CREATE(n, TRAIN_ADAM, 600);
 
-	NET_ADD(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0));
-	NET_ADD(n, relu_layer(0, 0, 0));
+	NET_ADD(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0, FILLER_MSRA, 0.5, 0));
+	NET_ADD(n, relu_layer(0));
 	NET_ADD(n, max_pooling_layer(32, 28, 28, 14, 14, 2, 0, 0));
 
-	NET_ADD(n, conv_layer(32, 14, 14, 64, 14, 14, 5, 1, 0));
-	NET_ADD(n, relu_layer(0, 0, 0));
+	NET_ADD(n, conv_layer(32, 14, 14, 64, 14, 14, 5, 1, 0, FILLER_MSRA, 0.5, 0));
+	NET_ADD(n, relu_layer(0));
 	NET_ADD(n, max_pooling_layer(64, 14, 14, 7, 7, 2, 0, 0));
 
-	NET_ADD(n, fc_layer(0, 1024, 0));
-	NET_ADD(n, relu_layer(0, 0, 0));
+	NET_ADD(n, fc_layer(0, 1024, FILLER_MSRA, 0.5, 0));
+	NET_ADD(n, relu_layer(0));
 	NET_ADD(n, dropout);
 
-	NET_ADD(n, fc_layer(0, 10, 0));
-	NET_ADD(n, softmax_layer(0, 0, 0));
-	NET_ADD(n, cee_layer(0, 0, 0));
+	NET_ADD(n, fc_layer(0, 10, FILLER_MSRA, 0.5, 0));
+	NET_ADD(n, softmax_layer(0));
+	NET_ADD(n, cee_layer(0));
 #endif
 	NET_FINISH(n);
 
@@ -128,9 +128,9 @@ int main(int argc, char **argv)
 	{
 		feed_data(n);
 		net_forward(n);
-		
+
 		for (int b = 0; b < n->batch; ++b)
-			right += (arg_max(&LAST_LAYER(n)->in.val[b * 10], 10) == arg_max(&LAST_LAYER(n)->param.val[b * 10], 10));
+			right += (arg_max(&LAST_LAYER(n)->in.val[b * 10], 10) == arg_max(&LAST_LAYER(n)->extra.val[b * 10], 10));
 	}
 
 	LOG("accurcy %f\n", 1.0 * right / images->dim[0]);

@@ -14,12 +14,7 @@ static void softmax_layer_prepare(layer_t *l)
 		l->out.size = l->in.size;
 	}
 
-	if (l->param.size != 0)
-	{
-		l->param.size = 0;
-	}
-
-	LOG("softmax_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->param.size);
+	LOG("softmax_layer: in %d\n", l->in.size);
 }
 
 static void softmax_layer_forward(layer_t *l)
@@ -73,9 +68,9 @@ static const layer_func_t softmax_func = {
 	softmax_layer_forward,
 	softmax_layer_backward};
 
-layer_t *softmax_layer(int in, int out, int param)
+layer_t *softmax_layer(int in)
 {
-	layer_t *l = layer(in, out, param, &softmax_func);
+	layer_t *l = layer(in, in, 0, 0, 0, &softmax_func);
 
 	return l;
 }

@@ -10,7 +10,7 @@ static void feed_data(net_t *n)
 	data_val_t label[4] = {5, 15, 25, 35};
 
 	memcpy(n->layer[0]->in.val, data, 4 * sizeof(data_val_t));
-	memcpy(LAST_LAYER(n)->param.val, label, 4 * sizeof(data_val_t));
+	memcpy(LAST_LAYER(n)->extra.val, label, 4 * sizeof(data_val_t));
 }
 
 int main(int argc, char **argv)
@@ -20,8 +20,8 @@ int main(int argc, char **argv)
 
 	net_t *n = net_create(2, TRAIN_DEFAULT, 4);
 
-	net_add(n, fc_layer(-1, 1, 0));
-	net_add(n, mse_layer(1, 1, -1));
+	net_add(n, fc_layer(1, 1, FILLER_CONST, 0, 0));
+	net_add(n, mse_layer(1));
 
 	net_finish(n);
 
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
 		//rate *= 2;
 	}
 
-	LOG("result = %f %f\n", n->layer[0]->param.val[0], n->layer[0]->param.val[1]);
+	LOG("result = %f %f\n", n->layer[0]->weight.val[0], n->layer[0]->bias.val[0]);
 
 	net_destroy(n);
 
