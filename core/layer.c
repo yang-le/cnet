@@ -24,7 +24,7 @@ size_t layer_data_init(layer_t *l, data_val_t *buf, int level)
 	buf += data_init(&l->in, buf, level, l->n->batch);
 	buf += data_init(&l->weight, buf, level, 1);
 	buf += data_init(&l->bias, buf, level, 1);
-	buf += data_init(&l->extra, buf, level, 1);
+	buf += data_init(&l->extra, buf, 0, 1);
 	/*  buf += */ data_init(&l->out, buf, level, l->n->batch);
 
 	switch (l->weight_filler.method)

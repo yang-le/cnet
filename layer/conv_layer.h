@@ -17,8 +17,6 @@ typedef struct
 	int k; // kernel size
 	int s; // step / stride
 	int p; // padding
-
-	data_t col; // the working space
 } conv_layer_t;
 
 layer_t *conv_layer(int ic, int iw, int ih, int oc, int ow, int oh, int k, int s, int p, int filler, float p0, float p1);

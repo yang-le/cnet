@@ -31,6 +31,7 @@ void net_finish(net_t *n)
 	int i = 0;
 	int out_size = 0;
 	int param_size = 0;
+	int extra_size = 0;
 	int total_size = 0;
 	int level[TRAIN_MAX] = {0, 1, 2, 2, 2, 2, 3};
 	data_val_t *data_buf = NULL;
@@ -45,10 +46,11 @@ void net_finish(net_t *n)
 			n->layer[i + 1]->in.size = n->layer[i]->out.size;
 
 		out_size += n->layer[i]->out.size;
-		param_size += n->layer[i]->weight.size + n->layer[i]->bias.size + n->layer[i]->extra.size;
+		param_size += n->layer[i]->weight.size + n->layer[i]->bias.size;
+		extra_size += n->layer[i]->extra.size;
 	}
 
-	total_size = (n->layer[0]->in.size * n->batch + param_size + out_size * n->batch) * (level[n->method] + 1);
+	total_size = (n->layer[0]->in.size * n->batch + param_size + out_size * n->batch) * (level[n->method] + 1) + extra_size;
 	data_buf = (data_val_t *)alloc(total_size, sizeof(data_val_t));
 	if (data_buf == NULL)
 	{
