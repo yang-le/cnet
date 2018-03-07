@@ -4,7 +4,7 @@
 
 void data_update_nesterov(data_t *data)
 {
-#define ALPHA 0.9
+    const double ALPHA = 0.9;
 
     int j = 0;
 
@@ -27,7 +27,7 @@ void data_update_sgd(data_t *data, double rate)
 
 void data_update_momentum(data_t *data, double rate)
 {
-#define ALPHA 0.9
+    const double ALPHA = 0.9;
 
     int j = 0;
 
@@ -41,7 +41,7 @@ void data_update_momentum(data_t *data, double rate)
 
 void data_update_adagrad(data_t *data, double rate)
 {
-#define EPSILON 1e-7
+    const double EPSILON = 1e-7;
 
     int j = 0;
 
@@ -55,8 +55,8 @@ void data_update_adagrad(data_t *data, double rate)
 
 void data_update_adadelta(data_t *data, double rate)
 {
-#define BETA 0.5
-#define EPSILON 1e-6
+    const double BETA = 0.5;
+    const double EPSILON = 1e-6;
 
     int j = 0;
 
@@ -70,9 +70,9 @@ void data_update_adadelta(data_t *data, double rate)
 
 void data_update_adam(data_t *data, double rate)
 {
-#define BETA1 0.9
-#define BETA2 0.999
-#define EPSILON 1e-8
+    const double BETA1 = 0.9;
+    const double BETA2 = 0.999;
+    const double EPSILON = 1e-8;
 
     static int t = 0;
     int j = 0;
