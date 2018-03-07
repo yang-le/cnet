@@ -19,7 +19,7 @@ int main(int argc, char **argv)
 	int i = 0;
 	float rate = 10;
 
-	net_t *n = net_create(5, TRAIN_DEFAULT, 4);
+	net_t *n = net_create(5, TRAIN_SGD, 4);
 
 	net_add(n, fc_layer(2, 2, FILLER_XAVIER, 0.5, 0));
 	net_add(n, sigmoid_layer(2));

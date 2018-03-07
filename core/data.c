@@ -2,9 +2,74 @@
 #include "log.h"
 #include <math.h>
 
-void data_update_adam(data_t *data)
+void data_update_nesterov(data_t *data)
 {
-#define ALPHA 0.001
+#define ALPHA 0.9
+
+    int j = 0;
+
+    for (j = 0; j < data->size; ++j)
+    {
+        data->val[j] += ALPHA * data->m[j];
+    }
+}
+
+void data_update_sgd(data_t *data, double rate)
+{
+    int j = 0;
+
+    for (j = 0; j < data->size; ++j)
+    {
+        data->val[j] -= rate * data->grad[j];
+        data->grad[j] = 0;
+    }
+}
+
+void data_update_momentum(data_t *data, double rate)
+{
+#define ALPHA 0.9
+
+    int j = 0;
+
+    for (j = 0; j < data->size; ++j)
+    {
+        data->m[j] = ALPHA * data->m[j] - rate * data->grad[j];
+        data->val[j] += data->m[j];
+        data->grad[j] = 0;
+    }
+}
+
+void data_update_adagrad(data_t *data, double rate)
+{
+#define EPSILON 1e-7
+
+    int j = 0;
+
+    for (j = 0; j < data->size; ++j)
+    {
+        data->m[j] += data->grad[j] * data->grad[j];
+        data->val[j] -= rate * data->grad[j] / (sqrt(data->m[j]) + EPSILON);
+        data->grad[j] = 0;
+    }
+}
+
+void data_update_adadelta(data_t *data, double rate)
+{
+#define BETA 0.5
+#define EPSILON 1e-6
+
+    int j = 0;
+
+    for (j = 0; j < data->size; ++j)
+    {
+        data->m[j] = BETA * data->m[j] + (1 - BETA) * data->grad[j] * data->grad[j];
+        data->val[j] -= rate * data->grad[j] / sqrt(data->m[j] + EPSILON);
+        data->grad[j] = 0;
+    }
+}
+
+void data_update_adam(data_t *data, double rate)
+{
 #define BETA1 0.9
 #define BETA2 0.999
 #define EPSILON 1e-8
@@ -18,18 +83,7 @@ void data_update_adam(data_t *data)
     {
         data->m[j] = BETA1 * data->m[j] + (1 - BETA1) * data->grad[j];
         data->v[j] = BETA2 * data->v[j] + (1 - BETA2) * data->grad[j] * data->grad[j];
-        data->val[j] -= ALPHA * sqrt(1 - pow(BETA2, t)) / (1 - pow(BETA1, t)) * data->m[j] / (sqrt(data->v[j]) + EPSILON);
-        data->grad[j] = 0;
-    }
-}
-
-void data_update(data_t *data, double rate)
-{
-    int j = 0;
-
-    for (j = 0; j < data->size; ++j)
-    {
-        data->val[j] -= rate * data->grad[j];
+        data->val[j] -= rate * sqrt(1 - pow(BETA2, t)) / (1 - pow(BETA1, t)) * data->m[j] / (sqrt(data->v[j]) + EPSILON);
         data->grad[j] = 0;
     }
 }

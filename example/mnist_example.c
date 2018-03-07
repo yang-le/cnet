@@ -62,7 +62,7 @@ int main(int argc, char **argv)
 	net_add(n, softmax_layer(10, 10, 0));
 	net_add(n, cee_layer(10, 0, -10));
 #else
-	float rate = 1e-4;
+	float rate = DEFAULT_ADAM_RATE;
 
 #ifdef USE_OPENCL
 	cl_init();

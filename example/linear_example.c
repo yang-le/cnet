@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	int i = 0;
 	float rate = 1e-1;
 
-	net_t *n = net_create(2, TRAIN_DEFAULT, 4);
+	net_t *n = net_create(2, TRAIN_SGD, 4);
 
 	net_add(n, fc_layer(1, 1, FILLER_CONST, 0, 0));
 	net_add(n, mse_layer(1));

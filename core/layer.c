@@ -17,15 +17,15 @@ layer_t *layer(int in, int out, int weight, int bias, int extra, const layer_fun
 	return l;
 }
 
-size_t layer_data_init(layer_t *l, data_val_t *buf)
+size_t layer_data_init(layer_t *l, data_val_t *buf, int level)
 {
 	data_val_t *start = buf;
 
-	buf += data_init(&l->in, buf, l->n->level, l->n->batch);
-	buf += data_init(&l->weight, buf, l->n->level, 1);
-	buf += data_init(&l->bias, buf, l->n->level, 1);
-	buf += data_init(&l->extra, buf, l->n->level, 1);
-	/*  buf += */ data_init(&l->out, buf, l->n->level, l->n->batch);
+	buf += data_init(&l->in, buf, level, l->n->batch);
+	buf += data_init(&l->weight, buf, level, 1);
+	buf += data_init(&l->bias, buf, level, 1);
+	buf += data_init(&l->extra, buf, level, 1);
+	/*  buf += */ data_init(&l->out, buf, level, l->n->batch);
 
 	switch (l->weight_filler.method)
 	{
@@ -65,7 +65,7 @@ size_t layer_data_init(layer_t *l, data_val_t *buf)
 	case FILLER_XAVIER:
 		uniform(l->bias.val, l->bias.size,
 				-sqrt(3 / (l->bias_filler.param[0] * l->in.size + (1 - l->bias_filler.param[0]) * l->out.size)),
-				sqrt(3 / (l->bias_filler.param[0] * l->in.size + (1 - l->bias_filler.param[0])* l->out.size)));
+				sqrt(3 / (l->bias_filler.param[0] * l->in.size + (1 - l->bias_filler.param[0]) * l->out.size)));
 		break;
 	case FILLER_MSRA:
 		normal(l->bias.val, l->bias.size, 0,

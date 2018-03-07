@@ -8,12 +8,12 @@
 #include "random.h"
 #include "common.h"
 
-net_t *net_create(int size, int level, int batch)
+net_t *net_create(int size, int method, int batch)
 {
 	net_t *n = (net_t *)alloc(1, sizeof(net_t) + sizeof(layer_t *) * size);
 
 	n->size = size;
-	n->level = level;
+	n->method = method;
 	n->batch = batch;
 	n->layer = (layer_t **)(n + 1);
 
@@ -32,6 +32,7 @@ void net_finish(net_t *n)
 	int out_size = 0;
 	int param_size = 0;
 	int total_size = 0;
+	int level[TRAIN_MAX] = {0, 1, 2, 2, 2, 2, 3};
 	data_val_t *data_buf = NULL;
 
 	n->layer = (layer_t **)(n + 1);
@@ -47,7 +48,7 @@ void net_finish(net_t *n)
 		param_size += n->layer[i]->weight.size + n->layer[i]->bias.size + n->layer[i]->extra.size;
 	}
 
-	total_size = (n->layer[0]->in.size * n->batch + param_size + out_size * n->batch) * (n->level + 1);
+	total_size = (n->layer[0]->in.size * n->batch + param_size + out_size * n->batch) * (level[n->method] + 1);
 	data_buf = (data_val_t *)alloc(total_size, sizeof(data_val_t));
 	if (data_buf == NULL)
 	{
@@ -58,7 +59,7 @@ void net_finish(net_t *n)
 	srand((unsigned int)time(NULL));
 	for (i = 0; i < n->size; ++i)
 	{
-		data_buf += layer_data_init(n->layer[i], data_buf);
+		data_buf += layer_data_init(n->layer[i], data_buf, level[n->method]);
 	}
 
 	LOG("total: layers %d, params %d, heap size %ld\n", n->size, param_size, get_alloc_size());
@@ -83,6 +84,13 @@ void net_backward(net_t *n)
 			LAST_LAYER(n)->out.grad[b * LAST_LAYER(n)->out.size + i] = 1;
 		}
 
+	if (n->method == TRAIN_NESTEROV)
+		for (i = 0; i < n->size; ++i)
+		{
+			data_update_nesterov(&n->layer[i]->weight);
+			data_update_nesterov(&n->layer[i]->bias);
+		}
+
 	for (i = n->size - 1; i >= 0; --i)
 	{
 		BACKWARD(n->layer[i]);
@@ -92,18 +100,20 @@ void net_backward(net_t *n)
 void net_update(net_t *n)
 {
 	int i = 0;
+	void (*update[TRAIN_MAX])(data_t *, double) = {
+		NULL,
+		data_update_sgd,
+		data_update_momentum,
+		data_update_momentum,
+		data_update_adagrad,
+		data_update_adadelta,
+		data_update_adam};
 
-	if (n->level == TRAIN_ADAM)
+	if (update[n->method])
 		for (i = 0; i < n->size; ++i)
 		{
-			data_update_adam(&n->layer[i]->weight);
-			data_update_adam(&n->layer[i]->bias);
-		}
-	else
-		for (i = 0; i < n->size; ++i)
-		{
-			data_update(&n->layer[i]->weight, n->rate);
-			data_update(&n->layer[i]->bias, n->rate);
+			update[n->method](&n->layer[i]->weight, n->rate);
+			update[n->method](&n->layer[i]->bias, n->rate);
 		}
 }
 

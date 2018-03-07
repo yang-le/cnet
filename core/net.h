@@ -3,10 +3,17 @@
 #include <stdlib.h>
 #include "layer.h"
 
-#define FORWARD_ONLY 0
-#define TRAIN_DEFAULT 1
-#define TRAIN_MOMENT 2
-#define TRAIN_ADAM 3
+enum
+{
+	TRAIN_FORWARD,
+	TRAIN_SGD,
+	TRAIN_MOMENTUM,
+	TRAIN_NESTEROV,
+	TRAIN_ADAGRAD,
+	TRAIN_ADADELTA,
+	TRAIN_ADAM,
+	TRAIN_MAX
+};
 
 struct layer;
 
@@ -14,7 +21,7 @@ typedef struct net
 {
 	struct layer **layer;
 	int size;
-	int level;
+	int method;
 	int batch;
 	float rate;
 } net_t;
@@ -24,13 +31,13 @@ typedef void feed_func_t(net_t *n);
 //#define FIRST_LAYER(n) ((n)->layer[0])
 #define LAST_LAYER(n) ((n)->layer[(n)->size - 1])
 
-#define NET_CREATE(n, level, batch) \
-	{                 \
-		int _cnt = 0; \
-		n = NULL;     \
-	_start:           \
-		if (_cnt)     \
-		n = net_create(_cnt, level, batch)
+#define NET_CREATE(n, method, batch) \
+	{                                \
+		int _cnt = 0;                \
+		n = NULL;                    \
+	_start:                          \
+		if (_cnt)                    \
+		n = net_create(_cnt, method, batch)
 
 #define NET_ADD(n, l)  \
 	if (n)             \
@@ -45,7 +52,7 @@ typedef void feed_func_t(net_t *n);
 		goto _start;   \
 	}
 
-net_t *net_create(int size, int level, int batch);
+net_t *net_create(int size, int method, int batch);
 void net_add(net_t *n, struct layer *l);
 void net_finish(net_t *n);
 void net_destroy(net_t *n);

@@ -48,7 +48,7 @@ typedef struct layer
 #define BACKWARD(l) ((l)->func->backward((l)))
 
 layer_t *layer(int in, int out, int weight, int bias, int extra, const layer_func_t *func);
-size_t layer_data_init(layer_t *l, data_val_t *buf);
+size_t layer_data_init(layer_t *l, data_val_t *buf, int level);
 
 void layer_set_weight_filler(layer_t *l, int method, data_val_t p1, data_val_t p2);
 void layer_set_bias_filler(layer_t *l, int method, data_val_t p1, data_val_t p2);
