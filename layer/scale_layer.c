@@ -23,7 +23,7 @@ static void scale_layer_forward(layer_t *l)
 	for (b = 0; b < l->n->batch; ++b)
 		for (i = 0; i < l->out.size; ++i)
 		{
-			l->out.val[b * l->out.size + i] = l->weight.val[0] * l->in.val[b * l->in.size + i] + l->bias.val[0];
+			l->out.val[b * l->out.size + i] = l->weight.val[i] * l->in.val[b * l->in.size + i] + l->bias.val[i];
 		}
 }
 
@@ -34,9 +34,9 @@ static void scale_layer_backward(layer_t *l)
 	for (b = 0; b < l->n->batch; ++b)
 		for (i = 0; i < l->in.size; ++i)
 		{
-			l->in.grad[b * l->in.size + i] = l->weight.val[0] * l->out.grad[b * l->out.size + i];
-            l->weight.grad[0] += l->in.val[b * l->in.size + i] * l->out.grad[b * l->out.size + i];
-            l->bias.grad[0] += l->out.grad[b * l->out.size + i];
+			l->in.grad[b * l->in.size + i] = l->weight.val[i] * l->out.grad[b * l->out.size + i];
+            l->weight.grad[i] += l->in.val[b * l->in.size + i] * l->out.grad[b * l->out.size + i];
+            l->bias.grad[i] += l->out.grad[b * l->out.size + i];
 		}
 }
 
@@ -47,7 +47,7 @@ static const layer_func_t scale_func = {
 
 layer_t *scale_layer(int in, int filler, float p0, float p1)
 {
-	layer_t *l = layer(in, in, 1, 1, 0, &scale_func);
+	layer_t *l = layer(in, in, in, in, 0, &scale_func);
     layer_set_weight_filler(l, filler, p0, p1);
 	return l;
 }
