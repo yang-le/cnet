@@ -3,25 +3,24 @@
 #include <stdlib.h>
 #include "layer.h"
 
-enum
-{
-	TRAIN_FORWARD,
-	TRAIN_SGD,
-	TRAIN_MOMENTUM,
-	TRAIN_NESTEROV,
-	TRAIN_ADAGRAD,
-	TRAIN_ADADELTA,
-	TRAIN_ADAM,
-	TRAIN_MAX
-};
-
 struct layer;
 
 typedef struct net
 {
 	struct layer **layer;
 	int size;
-	int method;
+	int train;
+	enum
+	{
+		TRAIN_FORWARD,
+		TRAIN_SGD,
+		TRAIN_MOMENTUM,
+		TRAIN_NESTEROV,
+		TRAIN_ADAGRAD,
+		TRAIN_ADADELTA,
+		TRAIN_ADAM,
+		TRAIN_MAX
+	} method;
 	int batch;
 	float rate;
 } net_t;

@@ -138,6 +138,7 @@ void net_train(net_t *n, feed_func_t feed, float rate)
 	int i = 0, b = 0;
 	float loss = 0;
 
+	n->train = 1;
 	n->rate = rate / n->batch;
 
 	feed(n);
@@ -151,20 +152,7 @@ void net_train(net_t *n, feed_func_t feed, float rate)
 
 	net_update(n);
 
-	//LOG("static:\n");
-#if 0
-	for(i = 0; i < n->size; ++i)
-	{
-		int j = 0;
-
-		LOG("layer %d: ", i);
-		for (j = 0; j < n->layer[i]->param.size; ++j)
-		{
-			LOG("w[%d] = %f ", j, n->layer[i]->param.val[j]);
-		}
-		LOG("\n");
-	}
-#endif
+	n->train = 0;
 	LOG("%f\n", loss / n->batch);
 }
 

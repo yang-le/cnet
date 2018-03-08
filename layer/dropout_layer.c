@@ -32,19 +32,24 @@ static void dropout_layer_forward(layer_t *l)
 	int i = 0, b = 0;
 	dropout_layer_t *drop = (dropout_layer_t *)l;
 
-	for (b = 0; b < l->n->batch; ++b)
-	{
-		if (drop->prob > 0)
-			uniform(l->extra.val, l->extra.size, 0, 1);
-
-		for (i = 0; i < l->in.size; ++i)
+	if (l->n->train)
+		for (b = 0; b < l->n->batch; ++b)
 		{
-			if (l->extra.val[i] < drop->prob)
-				l->out.val[b * l->in.size + i] = 0;
-			else
-				l->out.val[b * l->in.size + i] = l->in.val[b * l->in.size + i] / (1 - drop->prob);
+			if (drop->prob > 0)
+				uniform(l->extra.val, l->extra.size, 0, 1);
+
+			for (i = 0; i < l->in.size; ++i)
+			{
+				if (l->extra.val[i] < drop->prob)
+					l->out.val[b * l->in.size + i] = 0;
+				else
+					l->out.val[b * l->in.size + i] = l->in.val[b * l->in.size + i] / (1 - drop->prob);
+			}
 		}
-	}
+	else
+		for (b = 0; b < l->n->batch; ++b)
+			for (i = 0; i < l->in.size; ++i)
+				l->out.val[b * l->in.size + i] = l->in.val[b * l->in.size + i];
 }
 
 static void dropout_layer_backward(layer_t *l)
@@ -67,11 +72,11 @@ static const layer_func_t dropout_func = {
 	dropout_layer_forward,
 	dropout_layer_backward};
 
-layer_t *dropout_layer(int n, float droprob)
+layer_t *dropout_layer(int n, float keeprob)
 {
 	dropout_layer_t *drop = (dropout_layer_t *)alloc(1, sizeof(dropout_layer_t));
 
-	drop->prob = droprob;
+	drop->prob = 1 - keeprob;
 
 	drop->l.in.size = n;
 	drop->l.out.size = n;

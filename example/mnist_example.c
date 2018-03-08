@@ -73,8 +73,6 @@ int main(int argc, char **argv)
 	cublas_init();
 #endif
 
-	layer_t *dropout = dropout_layer(0, 0);
-
 	NET_CREATE(n, TRAIN_ADAM, 100);
 
 	NET_ADD(n, bn_layer(28 * 28));
@@ -90,7 +88,7 @@ int main(int argc, char **argv)
 
 	NET_ADD(n, fc_layer(0, 1024, FILLER_MSRA, 0.5, 0));
 	NET_ADD(n, relu_layer(0));
-	NET_ADD(n, dropout);
+	NET_ADD(n, dropout_layer(0, 0.5));
 
 	NET_ADD(n, fc_layer(0, 10, FILLER_MSRA, 0.5, 0));
 	NET_ADD(n, softmax_layer(0));
@@ -103,7 +101,6 @@ int main(int argc, char **argv)
 
 	net_param_load(n, "params.bin");
 
-	SET_DROP_PROB(dropout, 0.5);
 	for (i = 0; i < 100; ++i)
 	{
 		int j = 0;
@@ -128,7 +125,6 @@ int main(int argc, char **argv)
 	images = mnist_open(argv[3]);
 	labels = mnist_open(argv[4]);
 
-	SET_DROP_PROB(dropout, 0);
 	for (i = 0; i < images->dim[0] / n->batch; ++i)
 	{
 		feed_data(n);
