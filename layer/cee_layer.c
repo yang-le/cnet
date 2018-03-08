@@ -6,7 +6,7 @@ static void cee_layer_prepare(layer_t *l)
 {
 	if (l->in.size != 0)
 	{
-		l->param.size = l->in.size;
+		l->extra.size = l->in.size;
 	}
 
 	if (l->out.size != 1)
@@ -14,48 +14,53 @@ static void cee_layer_prepare(layer_t *l)
 		l->out.size = 1;
 	}
 
-	if (l->param.size != 0)
+	if (l->extra.size != 0)
 	{
-		l->in.size = l->param.size;
+		l->in.size = l->extra.size;
 	}
 
-	LOG("cee_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->param.size);
+	l->extra.size *= l->n->batch;
+
+	LOG("cee_layer: in %d\n", l->in.size);
 }
 
 static void cee_layer_forward(layer_t *l)
 {
-	int i = 0;
+	int i = 0, b = 0;
 
-	l->out.val[0] = 0;
-	for (i = 0; i < l->in.size; ++i)
+	for (b = 0; b < l->n->batch; ++b)
 	{
-		// see https://www.zhihu.com/question/52242037
-		if (l->in.val[i] < 1e-10)
-			l->in.val[i] = 1e-10;
+		l->out.val[b] = 0;
+		for (i = 0; i < l->in.size; ++i)
+		{
+			// see https://www.zhihu.com/question/52242037
+			if (l->in.val[b * l->in.size + i] < 1e-10)
+				l->in.val[b * l->in.size + i] = 1e-10;
 
-		l->out.val[0] += -l->param.val[i] * log(l->in.val[i]);
+			l->out.val[b] += -l->extra.val[b * l->in.size + i] * log(l->in.val[b * l->in.size + i]);
+		}
 	}
 }
 
 static void cee_layer_backward(layer_t *l)
 {
-	int i = 0;
+	int i = 0, b = 0;
 
-	for (i = 0; i < l->in.size; ++i)
-	{
-		l->in.grad[i] = l->out.grad[0] * (-l->param.val[i] / l->in.val[i]);
-	}
+	for (b = 0; b < l->n->batch; ++b)
+		for (i = 0; i < l->in.size; ++i)
+		{
+			l->in.grad[b * l->in.size + i] = l->out.grad[b] * (-l->extra.val[b * l->in.size + i] / l->in.val[b * l->in.size + i]);
+		}
 }
 
 static const layer_func_t cec_func = {
 	cee_layer_prepare,
 	cee_layer_forward,
-	cee_layer_backward
-};
+	cee_layer_backward};
 
-layer_t* cee_layer(int in, int out, int param)
+layer_t *cee_layer(int in)
 {
-	layer_t *l = layer(in, out, param, &cec_func);
+	layer_t *l = layer(in, 1, 0, 0, in, &cec_func);
 
 	return l;
 }

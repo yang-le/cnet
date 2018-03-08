@@ -26,18 +26,6 @@ static void pooling_layer_prepare(layer_t *l)
 		pooling->s = pooling->k;
 	}
 
-	// I have to know c, k, oh, ow
-
-	//if (pooling->oh == 0)
-	//{
-	//	pooling->oh = (pooling->ih + 2 * pooling->p - pooling->k) / pooling->s + 1;
-	//}
-
-	//if (pooling->ow == 0)
-	//{
-	//	pooling->ow = (pooling->iw + 2 * pooling->p - pooling->k) / pooling->s + 1;
-	//}
-
 	if (pooling->ih == 0)
 	{
 		pooling->ih = (pooling->oh - 1) * pooling->s + pooling->k - 2 * pooling->p;
@@ -55,43 +43,43 @@ static void pooling_layer_prepare(layer_t *l)
 
 	l->in.size = pooling->ic * pooling->iw * pooling->ih;
 	l->out.size = pooling->oc * pooling->ow * pooling->oh;
-	l->param.size = 0;
+	l->extra.size = pooling->ic * pooling->k * pooling->k * pooling->oh * pooling->ow;
 
-	pooling->col.size = pooling->ic * pooling->k * pooling->k * pooling->oh * pooling->ow;
-	data_init(&pooling->col, (data_val_t *)(pooling + 1), 0);
-
-	LOG("pooling_layer: %d x %d x %d => %d x %d x %d, kernel %d x %d + %d, padding %d, params %d\n",
-		pooling->ic, pooling->iw, pooling->ih, pooling->oc, pooling->ow, pooling->oh, pooling->k, pooling->k, pooling->s, pooling->p, l->param.size);
+	LOG("pooling_layer: %d x %d x %d => %d x %d x %d, kernel %d x %d + %d, padding %d\n",
+		pooling->ic, pooling->iw, pooling->ih, pooling->oc, pooling->ow, pooling->oh, pooling->k, pooling->k, pooling->s, pooling->p);
 }
 
 static void max_pooling_layer_forward(layer_t *l)
 {
-	int i = 0, j = 0, k = 0;
+	int i = 0, j = 0, k = 0, b = 0;
 	pooling_layer_t *pooling = (pooling_layer_t *)l;
 
 	int channels = pooling->ic;
 	int pool_size = pooling->k * pooling->k;
 	int out_size = pooling->oh * pooling->ow;
 
-	im2col(&l->in.val, pooling->ic, pooling->ih, pooling->iw, pooling->k, pooling->s, pooling->p, &pooling->col.val);
-
-	for (k = 0; k < channels; ++k)
+	for (b = 0; b < l->n->batch; ++b)
 	{
-		int offset = k * out_size;
-		int pool_offset = pool_size * offset;
+		im2col(&l->in.val, b * l->in.size, pooling->ic, pooling->ih, pooling->iw, pooling->k, pooling->s, pooling->p, &l->extra.val, 0);
 
-		for (j = 0; j < out_size; ++j)
+		for (k = 0; k < channels; ++k)
 		{
-			l->out.val[offset + j] = pooling->col.val[pool_offset + j];
-		}
+			int offset = k * out_size;
+			int pool_offset = pool_size * offset;
 
-		for (i = 1; i < pool_size; ++i)
-		{
-			int index = pool_offset + i * out_size;
 			for (j = 0; j < out_size; ++j)
 			{
-				if (pooling->col.val[index + j] > l->out.val[offset + j])
-					l->out.val[offset + j] = pooling->col.val[index + j];
+				l->out.val[b * l->out.size + offset + j] = l->extra.val[pool_offset + j];
+			}
+
+			for (i = 1; i < pool_size; ++i)
+			{
+				int index = pool_offset + i * out_size;
+				for (j = 0; j < out_size; ++j)
+				{
+					if (l->extra.val[index + j] > l->out.val[offset + j])
+						l->out.val[b * l->out.size + offset + j] = l->extra.val[index + j];
+				}
 			}
 		}
 	}
@@ -99,31 +87,34 @@ static void max_pooling_layer_forward(layer_t *l)
 
 static void max_pooling_layer_backward(layer_t *l)
 {
-	int i = 0, j = 0, k = 0;
+	int i = 0, j = 0, k = 0, b = 0;
 	pooling_layer_t *pooling = (pooling_layer_t *)l;
 
 	int channels = pooling->ic;
 	int pool_size = pooling->k * pooling->k;
 	int out_size = pooling->oh * pooling->ow;
 
-	for (k = 0; k < channels; ++k)
+	for (b = 0; b < l->n->batch; ++b)
 	{
-		int offset = k * out_size;
-		for (i = 0; i < pool_size; ++i)
+		for (k = 0; k < channels; ++k)
 		{
-			int index = (k * pool_size + i) * out_size;
-			for (j = 0; j < out_size; ++j)
+			int offset = k * out_size;
+			for (i = 0; i < pool_size; ++i)
 			{
-				if (pooling->col.val[index + j] != l->out.val[offset + j])
-					pooling->col.grad[index + j] = 0;
-				else
-					pooling->col.grad[index + j] = l->out.grad[offset + j];
+				int index = (k * pool_size + i) * out_size;
+				for (j = 0; j < out_size; ++j)
+				{
+					if (l->extra.val[index + j] != l->out.val[b * l->out.size + offset + j])
+						l->extra.grad[index + j] = 0;
+					else
+						l->extra.grad[index + j] = l->out.grad[b * l->out.size + offset + j];
+				}
 			}
 		}
-	}
 
-	memset(l->in.grad, 0, l->in.size * sizeof(l->in.grad[0]));
-	col2im(&pooling->col.grad, pooling->ic, pooling->ih, pooling->iw, pooling->k, pooling->s, pooling->p, &l->in.grad);
+		memset(l->in.grad + b * l->in.size, 0, l->in.size * sizeof(l->in.grad[0]));
+		col2im(&l->extra.grad, 0, pooling->ic, pooling->ih, pooling->iw, pooling->k, pooling->s, pooling->p, &l->in.grad, b * l->in.size);
+	}
 }
 
 static void avg_pooling_layer_forward(layer_t *l)
@@ -146,8 +137,7 @@ static const layer_func_t avg_pooling_func = {
 
 static layer_t *pooling_layer(int c, int iw, int ih, int ow, int oh, int k, int s, int p, const layer_func_t *func)
 {
-	pooling_layer_t *pooling = (pooling_layer_t *)alloc(1, sizeof(pooling_layer_t) +
-															   c * k * k * oh * ow * sizeof(data_val_t));
+	pooling_layer_t *pooling = (pooling_layer_t *)alloc(1, sizeof(pooling_layer_t));
 
 	pooling->l.func = func;
 

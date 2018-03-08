@@ -16,6 +16,7 @@ typedef struct
 {
 	cl_mem buf;
 	void *p;
+	int size;
 } cl_data_val_t;
 #endif
 
@@ -37,16 +38,23 @@ typedef struct
 	data_val_t *v; // for adam
 
 	int size;
-	int immutable;
 } data_t;
 
-size_t data_init(data_t *data, data_val_t *buf, int level);
-void data_update(data_t *data, double rate);
-void data_update_adam(data_t *data);
+#define DEFAULT_ADAM_RATE 0.001
+
+size_t data_init(data_t *data, data_val_t *buf, int level, int batch);
+
+void data_update_nesterov(data_t *data);
+void data_update_sgd(data_t *data, double rate);
+void data_update_momentum(data_t *data, double rate);
+void data_update_adagrad(data_t *data, double rate);
+void data_update_adadelta(data_t *data, double rate);
+void data_update_adam(data_t *data, double rate);
+
 void data_load(FILE *fp, data_t *data);
 void data_save(const data_t *data, FILE *fp);
 
 #ifdef USE_OPENCL
-void cl_data_map(cl_data_val_t *data, int size);
+void cl_data_map(cl_data_val_t *data);
 void cl_data_unmap(cl_data_val_t *data);
 #endif

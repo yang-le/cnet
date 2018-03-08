@@ -4,38 +4,41 @@
 #include <math.h>
 
 #include "net.h"
-#include "layer.h"
 #include "log.h"
 #include "random.h"
 #include "common.h"
 
-net_t* net_create(size_t size)
+net_t *net_create(int size, int method, int batch)
 {
-	net_t *n = (net_t *)alloc(1, sizeof(net_t) + sizeof(layer_t*) * size);
+	net_t *n = (net_t *)alloc(1, sizeof(net_t) + sizeof(layer_t *) * size);
 
 	n->size = size;
+	n->method = method;
+	n->batch = batch;
 	n->layer = (layer_t **)(n + 1);
 
 	return n;
 }
 
-void net_add(net_t *n, layer_t *l)
+void net_add(net_t *n, struct layer *l)
 {
+	l->n = n;
 	*n->layer++ = l;
 }
 
-void net_finish(net_t *n, int level)
+void net_finish(net_t *n)
 {
 	int i = 0;
 	int out_size = 0;
 	int param_size = 0;
+	int extra_size = 0;
 	int total_size = 0;
+	int level[TRAIN_MAX] = {0, 1, 2, 2, 2, 2, 3};
 	data_val_t *data_buf = NULL;
 
 	n->layer = (layer_t **)(n + 1);
-	n->level = level;
 
-	for(i = 0; i < n->size; ++i)
+	for (i = 0; i < n->size; ++i)
 	{
 		PREPARE(n->layer[i]);
 
@@ -43,41 +46,22 @@ void net_finish(net_t *n, int level)
 			n->layer[i + 1]->in.size = n->layer[i]->out.size;
 
 		out_size += n->layer[i]->out.size;
-		param_size += n->layer[i]->param.size;
+		param_size += n->layer[i]->weight.size + n->layer[i]->bias.size;
+		extra_size += n->layer[i]->extra.size;
 	}
-	
-	total_size = (n->layer[0]->in.size + param_size + out_size) * (level + 1);
-	data_buf = (data_val_t*)alloc(total_size, sizeof(data_val_t));
 
-	for(i = 0; i < n->size; ++i)
+	total_size = (n->layer[0]->in.size * n->batch + param_size + out_size * n->batch) * (level[n->method] + 1) + extra_size;
+	data_buf = (data_val_t *)alloc(total_size, sizeof(data_val_t));
+	if (data_buf == NULL)
 	{
-		data_buf += layer_data_init(n->layer[i], data_buf, level);
+		LOG("fail to alloc %ld bytes memory, you can try with a smaller batch size.\n", total_size * sizeof(data_val_t));
+		exit(-1);
 	}
 
 	srand((unsigned int)time(NULL));
-	for(i = 0; i < n->size; ++i)
+	for (i = 0; i < n->size; ++i)
 	{
-		int j = 0;
-
-		//LOG("layer %d param ", i);
-
-		if (!n->layer[i]->param.immutable)
-		{
-			for (j = 0; j < n->layer[i]->param.size - n->layer[i]->out.size; ++j)
-			{
-				truncated_normal(&n->layer[i]->param.val[j], 0, 0.1);
-				//LOG("%f ", n->layer[i]->param.val[j]);
-			}
-
-			// init bias
-			for (; j < n->layer[i]->param.size; ++j)
-			{
-				n->layer[i]->param.val[j] = 0.1;
-				//LOG("%f ", n->layer[i]->param.val[j]);
-			}
-		}
-
-		//LOG("\n");
+		data_buf += layer_data_init(n->layer[i], data_buf, level[n->method]);
 	}
 
 	LOG("total: layers %d, params %d, heap size %ld\n", n->size, param_size, get_alloc_size());
@@ -86,7 +70,7 @@ void net_finish(net_t *n, int level)
 void net_forward(net_t *n)
 {
 	int i = 0;
-	for(i = 0; i < n->size; ++i)
+	for (i = 0; i < n->size; ++i)
 	{
 		FORWARD(n->layer[i]);
 	}
@@ -94,14 +78,22 @@ void net_forward(net_t *n)
 
 void net_backward(net_t *n)
 {
-	int i = 0;
+	int i = 0, b = 0;
 
-	for (i = 0; i < LAST_LAYER(n)->out.size; ++i)
-	{
-		LAST_LAYER(n)->out.grad[i] = 1;
-	}
+	for (b = 0; b < n->batch; ++b)
+		for (i = 0; i < LAST_LAYER(n)->out.size; ++i)
+		{
+			LAST_LAYER(n)->out.grad[b * LAST_LAYER(n)->out.size + i] = 1;
+		}
 
-	for(i = n->size - 1; i >= 0; --i)
+	if (n->method == TRAIN_NESTEROV)
+		for (i = 0; i < n->size; ++i)
+		{
+			data_update_nesterov(&n->layer[i]->weight);
+			data_update_nesterov(&n->layer[i]->bias);
+		}
+
+	for (i = n->size - 1; i >= 0; --i)
 	{
 		BACKWARD(n->layer[i]);
 	}
@@ -110,16 +102,20 @@ void net_backward(net_t *n)
 void net_update(net_t *n)
 {
 	int i = 0;
+	void (*update[TRAIN_MAX])(data_t *, double) = {
+		NULL,
+		data_update_sgd,
+		data_update_momentum,
+		data_update_momentum,
+		data_update_adagrad,
+		data_update_adadelta,
+		data_update_adam};
 
-	if (n->level == TRAIN_ADAM)
-		for(i = 0; i < n->size; ++i)
+	if (update[n->method])
+		for (i = 0; i < n->size; ++i)
 		{
-			data_update_adam(&n->layer[i]->param);
-		}
-	else
-		for(i = 0; i < n->size; ++i)
-		{
-			data_update(&n->layer[i]->param, n->rate);
+			update[n->method](&n->layer[i]->weight, n->rate);
+			update[n->method](&n->layer[i]->bias, n->rate);
 		}
 }
 
@@ -129,7 +125,7 @@ void net_destroy(net_t *n)
 
 	free(n->layer[0]->in.val);
 
-	for(i = 0; i < n->size; ++i)
+	for (i = 0; i < n->size; ++i)
 	{
 		free(n->layer[i]);
 	}
@@ -137,44 +133,27 @@ void net_destroy(net_t *n)
 	free(n);
 }
 
-void net_train(net_t *n, feed_func_t feed, float rate, int round)
+void net_train(net_t *n, feed_func_t feed, float rate)
 {
-	int i = 0;
+	int i = 0, b = 0;
 	float loss = 0;
 
-	n->rate = rate / round;
+	n->train = 1;
+	n->rate = rate / n->batch;
 
-	for (i = 0; i < round; ++i)
-	{
-		feed(n);
+	feed(n);
 
-		net_forward(n);
+	net_forward(n);
 
-		net_backward(n);
+	net_backward(n);
 
-		loss +=  LAST_LAYER(n)->out.val[0];
-	}
+	for (b = 0; b < n->batch; ++b)
+		loss += LAST_LAYER(n)->out.val[b];
 
 	net_update(n);
 
-	//LOG("static:\n");
-#if 0
-	for(i = 0; i < n->size; ++i)
-	{
-		int j = 0;
-
-		if (!n->layer[i]->param.immutable)
-		{
-			LOG("layer %d: ", i);
-			for (j = 0; j < n->layer[i]->param.size; ++j)
-			{
-				LOG("w[%d] = %f ", j, n->layer[i]->param.val[j]);
-			}
-			LOG("\n");
-		}
-	}
-#endif
-	LOG("%f\n",  loss / round);
+	n->train = 0;
+	LOG("%f\n", loss / n->batch);
 }
 
 void net_param_save(net_t *n, const char *file)
@@ -182,9 +161,10 @@ void net_param_save(net_t *n, const char *file)
 	int i = 0;
 	FILE *fp = fopen(file, "wb");
 
-	for(i = 0; i < n->size; ++i)
+	for (i = 0; i < n->size; ++i)
 	{
-		data_save(&n->layer[i]->param, fp);
+		data_save(&n->layer[i]->weight, fp);
+		data_save(&n->layer[i]->bias, fp);
 	}
 
 	fclose(fp);
@@ -201,9 +181,10 @@ void net_param_load(net_t *n, const char *file)
 		return;
 	}
 
-	for(i = 0; i < n->size; ++i)
+	for (i = 0; i < n->size; ++i)
 	{
-		data_load(fp, &n->layer[i]->param);
+		data_load(fp, &n->layer[i]->weight);
+		data_load(fp, &n->layer[i]->bias);
 	}
 
 	fclose(fp);
