@@ -16,6 +16,8 @@
 #include "pooling_layer.h"
 #include "relu_layer.h"
 #include "dropout_layer.h"
+#include "normalization_layer.h"
+#include "scale_layer.h"
 
 static idx_t *images = NULL;
 static idx_t *labels = NULL;
@@ -28,7 +30,7 @@ static void feed_data(net_t *n)
 	{
 		int j = 0;
 		for (j = 0; j < 28 * 28; ++j)
-			n->layer[0]->in.val[b * 28 * 28 + j] = 1.0 * images->data[(i % images->dim[0]) * 28 * 28 + j] / 255;
+			n->layer[0]->in.val[b * 28 * 28 + j] = images->data[(i % images->dim[0]) * 28 * 28 + j];
 
 		for (j = 0; j < 10; ++j)
 			LAST_LAYER(n)->extra.val[b * 10 + j] = (labels->data[i % labels->dim[0]] == j);
@@ -73,7 +75,10 @@ int main(int argc, char **argv)
 
 	layer_t *dropout = dropout_layer(0, 0);
 
-	NET_CREATE(n, TRAIN_ADAM, 600);
+	NET_CREATE(n, TRAIN_ADAM, 100);
+
+	NET_ADD(n, bn_layer(28 * 28));
+	NET_ADD(n, scale_layer(28 * 28, FILLER_CONST, 1, 0));
 
 	NET_ADD(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0, FILLER_MSRA, 0.5, 0));
 	NET_ADD(n, relu_layer(0));
