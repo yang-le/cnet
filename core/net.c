@@ -109,13 +109,19 @@ void net_update(net_t *n)
 		data_update_momentum,
 		data_update_adagrad,
 		data_update_adadelta,
-		data_update_adam};
+		NULL};
 
 	if (update[n->method])
 		for (i = 0; i < n->size; ++i)
 		{
 			update[n->method](&n->layer[i]->weight, n->rate);
 			update[n->method](&n->layer[i]->bias, n->rate);
+		}
+	else if (n->method == TRAIN_ADAM)
+		for (i = 0; i < n->size; ++i)
+		{
+			data_update_adam(&n->layer[i]->weight, n->rate, n->t);
+			data_update_adam(&n->layer[i]->bias, n->rate, n->t++);
 		}
 }
 

@@ -22,6 +22,7 @@ typedef struct net
 		TRAIN_MAX
 	} method;
 	int batch;
+	int t;
 	float rate;
 } net_t;
 

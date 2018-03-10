@@ -68,16 +68,13 @@ void data_update_adadelta(data_t *data, double rate)
     }
 }
 
-void data_update_adam(data_t *data, double rate)
+void data_update_adam(data_t *data, double rate, int t)
 {
     const double BETA1 = 0.9;
     const double BETA2 = 0.999;
     const double EPSILON = 1e-8;
 
-    static int t = 0;
     int j = 0;
-
-    ++t;
 
     for (j = 0; j < data->size; ++j)
     {

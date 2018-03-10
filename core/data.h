@@ -49,7 +49,7 @@ void data_update_sgd(data_t *data, double rate);
 void data_update_momentum(data_t *data, double rate);
 void data_update_adagrad(data_t *data, double rate);
 void data_update_adadelta(data_t *data, double rate);
-void data_update_adam(data_t *data, double rate);
+void data_update_adam(data_t *data, double rate, int t);
 
 void data_load(FILE *fp, data_t *data);
 void data_save(const data_t *data, FILE *fp);
