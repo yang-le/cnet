@@ -141,9 +141,6 @@ void net_destroy(net_t *n)
 
 void net_train(net_t *n, feed_func_t feed, float rate)
 {
-	int i = 0, b = 0;
-	float loss = 0;
-
 	n->train = 1;
 	n->rate = rate / n->batch;
 
@@ -153,13 +150,9 @@ void net_train(net_t *n, feed_func_t feed, float rate)
 
 	net_backward(n);
 
-	for (b = 0; b < n->batch; ++b)
-		loss += LAST_LAYER(n)->out.val[b];
-
 	net_update(n);
 
 	n->train = 0;
-	LOG("%f\n", loss / n->batch);
 }
 
 void net_param_save(net_t *n, const char *file)

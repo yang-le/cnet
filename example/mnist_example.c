@@ -53,18 +53,10 @@ static int arg_max(data_val_t *data, int n)
 
 int main(int argc, char **argv)
 {
-	int i = 0;
 	int right = 0;
+	float loss = 0;
+	time_t start = time(NULL);
 	net_t *n = NULL;
-#if 0
-	float rate = 1;
-	n = net_create(3);
-
-	net_add(n, fc_layer(-28 * 28, 10, 0));
-	net_add(n, softmax_layer(10, 10, 0));
-	net_add(n, cee_layer(10, 0, -10));
-#else
-	float rate = DEFAULT_ADAM_RATE;
 
 #ifdef USE_OPENCL
 	cl_init();
@@ -73,27 +65,24 @@ int main(int argc, char **argv)
 	cublas_init();
 #endif
 
-	NET_CREATE(n, TRAIN_ADAM, 100);
+	NET_CREATE(n, TRAIN_SGD, 100);
 
-	NET_ADD(n, bn_layer(28 * 28));
-	NET_ADD(n, scale_layer(28 * 28, FILLER_CONST, 1, 0));
-
-	NET_ADD(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 1, 0, FILLER_MSRA, 0.5, 0));
+	NET_ADD(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 0, 0, FILLER_MSRA, 0.5, 0));
 	NET_ADD(n, relu_layer(0));
 	NET_ADD(n, max_pooling_layer(32, 28, 28, 14, 14, 2, 0, 0));
 
-	NET_ADD(n, conv_layer(32, 14, 14, 64, 14, 14, 5, 1, 0, FILLER_MSRA, 0.5, 0));
+	NET_ADD(n, conv_layer(32, 14, 14, 64, 14, 14, 5, 0, 0, FILLER_MSRA, 0.5, 0));
 	NET_ADD(n, relu_layer(0));
 	NET_ADD(n, max_pooling_layer(64, 14, 14, 7, 7, 2, 0, 0));
 
 	NET_ADD(n, fc_layer(0, 1024, FILLER_MSRA, 0.5, 0));
 	NET_ADD(n, relu_layer(0));
-	NET_ADD(n, dropout_layer(0, 0.5));
+	NET_ADD(n, dropout_layer(0, 0.6));
 
 	NET_ADD(n, fc_layer(0, 10, FILLER_MSRA, 0.5, 0));
 	NET_ADD(n, softmax_layer(0));
 	NET_ADD(n, cee_layer(0));
-#endif
+
 	NET_FINISH(n);
 
 	images = mnist_open(argv[1]);
@@ -101,20 +90,30 @@ int main(int argc, char **argv)
 
 	net_param_load(n, "params.bin");
 
-	for (i = 0; i < 100; ++i)
-	{
-		int j = 0;
-		time_t start = time(NULL);
+	for (int i = 0; i < 20000; ++i)
+	{	
+		net_train(n, feed_data, 0.001);
 
-		net_train(n, feed_data, rate);
-		LOG("round %d train with rate %f [%ld s]\n", i, rate, time(NULL) - start);
+		for (int b = 0; b < n->batch; ++b)
+			loss += LAST_LAYER(n)->out.val[b];
 
-		//LOG("output ");
-		//for (j = 0; j <  10; ++j)
-		//	LOG("%f[%f] ", LAST_LAYER(n)->in.val[j], LAST_LAYER(n)->param.val[j]);
-		//LOG("\n");
-		if (i % 10 == 0)
+		if (i % 50 == 0)
+		{
+			feed_data(n);
+			net_forward(n);
+
+			for (int b = 0; b < n->batch; ++b)
+				right += (arg_max(&LAST_LAYER(n)->in.val[b * 10], 10) == arg_max(&LAST_LAYER(n)->extra.val[b * 10], 10));
+
+			LOG("loss = %f, train accurcy = %f, step = %d\n", loss / n->batch / 50, 1.0 * right / n->batch, i);
+			LOG("steps/sec = %f\n", 50.0 / (time(NULL) - start));
+			
+			loss = 0;
+			right = 0;
+			start = time(NULL);
+
 			net_param_save(n, "params.bin");
+		}
 	}
 
 	net_param_save(n, "params.bin");
@@ -125,7 +124,7 @@ int main(int argc, char **argv)
 	images = mnist_open(argv[3]);
 	labels = mnist_open(argv[4]);
 
-	for (i = 0; i < images->dim[0] / n->batch; ++i)
+	for (int i = 0; i < images->dim[0] / n->batch; ++i)
 	{
 		feed_data(n);
 		net_forward(n);
