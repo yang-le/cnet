@@ -87,3 +87,6 @@ target_link_libraries(xor_example cnet)
 
 add_executable(vgg_example example/vgg_example.c)
 target_link_libraries(vgg_example cnet)
+
+add_executable(googlenet_example example/googlenet_example.c)
+target_link_libraries(googlenet_example cnet)
