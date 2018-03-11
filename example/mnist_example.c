@@ -8,16 +8,8 @@
 #endif
 #include "mnist.h"
 #include "net.h"
+#include "layers.h"
 #include "log.h"
-#include "fc_layer.h"
-#include "softmax_layer.h"
-#include "cee_layer.h"
-#include "conv_layer.h"
-#include "pooling_layer.h"
-#include "relu_layer.h"
-#include "dropout_layer.h"
-#include "normalization_layer.h"
-#include "scale_layer.h"
 
 static idx_t *images = NULL;
 static idx_t *labels = NULL;
@@ -91,7 +83,7 @@ int main(int argc, char **argv)
 	net_param_load(n, "params.bin");
 
 	for (int i = 0; i < 20000; ++i)
-	{	
+	{
 		net_train(n, feed_data, 0.001);
 
 		for (int b = 0; b < n->batch; ++b)
@@ -107,7 +99,7 @@ int main(int argc, char **argv)
 
 			LOG("loss = %f, train accurcy = %f, step = %d\n", loss / n->batch / 50, 1.0 * right / n->batch, i);
 			LOG("steps/sec = %f\n", 50.0 / (time(NULL) - start));
-			
+
 			loss = 0;
 			right = 0;
 			start = time(NULL);
