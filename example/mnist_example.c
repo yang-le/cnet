@@ -111,7 +111,7 @@ int main(int argc, char **argv)
 	net_param_load(n, "params.bin");
 
 	for (int i = 0; i < 20000; ++i)
-	{	
+	{
 		net_train(n, feed_data, 0.001);
 
 		for (int b = 0; b < n->batch; ++b)
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 
 			LOG("loss = %f, train accurcy = %f, step = %d\n", loss / n->batch / 50, 1.0 * right / n->batch, i);
 			LOG("steps/sec = %f\n", 50.0 / (time(NULL) - start));
-			
+
 			loss = 0;
 			right = 0;
 			start = time(NULL);
