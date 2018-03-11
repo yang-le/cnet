@@ -84,3 +84,6 @@ target_link_libraries(mnist_example cnet)
 
 add_executable(xor_example example/xor_example.c)
 target_link_libraries(xor_example cnet)
+
+add_executable(vgg_example example/vgg_example.c)
+target_link_libraries(vgg_example cnet)
