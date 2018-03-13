@@ -6,7 +6,7 @@
 typedef struct
 {
     int offset;
-    layer_t *l;
+    net_t *n;
 } branch_t;
 
 typedef struct
@@ -17,4 +17,4 @@ typedef struct
     branch_t *branch;
 } branch_layer_t;
 
-layer_t *branch_layer(int in, layer_t *l, int offset, ...);
+layer_t *branch_layer(int in, net_t *n, int offset, ...);

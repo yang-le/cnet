@@ -35,9 +35,10 @@ typedef void feed_func_t(net_t *n);
 	{                                \
 		int _cnt = 0;                \
 		n = NULL;                    \
-	_start:                          \
-		if (_cnt)                    \
-		n = net_create(_cnt, method, batch)
+		while (!n)                   \
+		{                            \
+			if (_cnt)                \
+			n = net_create(_cnt, method, batch)
 
 #define NET_ADD(n, l)  \
 	if (n)             \
@@ -48,8 +49,7 @@ typedef void feed_func_t(net_t *n);
 #define NET_FINISH(n)  \
 	if (n)             \
 		net_finish(n); \
-	else               \
-		goto _start;   \
+	}                  \
 	}
 
 net_t *net_create(int size, int method, int batch);

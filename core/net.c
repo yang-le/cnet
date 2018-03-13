@@ -78,13 +78,7 @@ void net_forward(net_t *n)
 
 void net_backward(net_t *n)
 {
-	int i = 0, b = 0;
-
-	for (b = 0; b < n->batch; ++b)
-		for (i = 0; i < LAST_LAYER(n)->out.size; ++i)
-		{
-			LAST_LAYER(n)->out.grad[b * LAST_LAYER(n)->out.size + i] = 1;
-		}
+	int i = 0;
 
 	if (n->method == TRAIN_NESTEROV)
 		for (i = 0; i < n->size; ++i)
@@ -141,12 +135,20 @@ void net_destroy(net_t *n)
 
 void net_train(net_t *n, feed_func_t feed, float rate)
 {
+	int i = 0, b = 0;
+
 	n->train = 1;
 	n->rate = rate / n->batch;
 
 	feed(n);
 
 	net_forward(n);
+
+	for (b = 0; b < n->batch; ++b)
+		for (i = 0; i < LAST_LAYER(n)->out.size; ++i)
+		{
+			LAST_LAYER(n)->out.grad[b * LAST_LAYER(n)->out.size + i] = 1;
+		}
 
 	net_backward(n);
 
