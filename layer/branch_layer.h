@@ -18,3 +18,4 @@ typedef struct
 } branch_layer_t;
 
 layer_t *branch_layer(int in, net_t *n, int offset, ...);
+int is_branch_layer(layer_t *l);

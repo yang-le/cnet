@@ -7,6 +7,7 @@
 #include "log.h"
 #include "random.h"
 #include "common.h"
+#include "branch_layer.h"
 
 net_t *net_create(int size, int method, int batch)
 {
@@ -108,14 +109,34 @@ void net_update(net_t *n)
 	if (update[n->method])
 		for (i = 0; i < n->size; ++i)
 		{
-			update[n->method](&n->layer[i]->weight, n->rate);
-			update[n->method](&n->layer[i]->bias, n->rate);
+			if (!is_branch_layer(n->layer[i]))
+			{
+				update[n->method](&n->layer[i]->weight, n->rate);
+				update[n->method](&n->layer[i]->bias, n->rate);
+			} else {
+				branch_layer_t *me = (branch_layer_t *)n->layer[i];
+				for (int j = 0; j < me->num; ++j)
+				{
+					me->branch[j].n->rate = n->rate;
+					net_update(me->branch[j].n);
+				}
+			}
 		}
 	else if (n->method == TRAIN_ADAM)
 		for (i = 0; i < n->size; ++i)
 		{
-			data_update_adam(&n->layer[i]->weight, n->rate, n->t);
-			data_update_adam(&n->layer[i]->bias, n->rate, n->t++);
+			if (!is_branch_layer(n->layer[i]))
+			{
+				data_update_adam(&n->layer[i]->weight, n->rate, n->t);
+				data_update_adam(&n->layer[i]->bias, n->rate, n->t++);
+			} else {
+				branch_layer_t *me = (branch_layer_t *)n->layer[i];
+				for (int j = 0; j < me->num; ++j)
+				{
+					me->branch[j].n->rate = n->rate;
+					net_update(me->branch[j].n);
+				}
+			}
 		}
 }
 
@@ -157,18 +178,49 @@ void net_train(net_t *n, feed_func_t feed, float rate)
 	n->train = 0;
 }
 
+static void net_param_save_imp(net_t *n, FILE *fp)
+{
+	for (int i = 0; i < n->size; ++i)
+	{
+		if (!is_branch_layer(n->layer[i]))
+		{	
+			data_save(&n->layer[i]->weight, fp);
+			data_save(&n->layer[i]->bias, fp);
+		} else {
+			branch_layer_t *me = (branch_layer_t *)n->layer[i];
+			for (int j = 0; j < me->num; ++j)
+			{
+				net_param_save_imp(me->branch[j].n, fp);
+			}
+		}
+	}
+}
+
 void net_param_save(net_t *n, const char *file)
 {
-	int i = 0;
 	FILE *fp = fopen(file, "wb");
 
-	for (i = 0; i < n->size; ++i)
-	{
-		data_save(&n->layer[i]->weight, fp);
-		data_save(&n->layer[i]->bias, fp);
-	}
+	net_param_save_imp(n, fp);
 
 	fclose(fp);
+}
+
+static void net_param_load_imp(net_t *n, FILE *fp)
+{
+	for (int i = 0; i < n->size; ++i)
+	{
+		if (!is_branch_layer(n->layer[i]))
+		{
+			data_load(fp, &n->layer[i]->weight);
+			data_load(fp, &n->layer[i]->bias);
+		} else {
+			branch_layer_t *me = (branch_layer_t *)n->layer[i];
+			for (int j = 0; j < me->num; ++j)
+			{
+				net_param_load_imp(me->branch[j].n, fp);
+			}
+		}
+	}
 }
 
 void net_param_load(net_t *n, const char *file)
@@ -182,11 +234,7 @@ void net_param_load(net_t *n, const char *file)
 		return;
 	}
 
-	for (i = 0; i < n->size; ++i)
-	{
-		data_load(fp, &n->layer[i]->weight);
-		data_load(fp, &n->layer[i]->bias);
-	}
+	net_param_load_imp(n, fp);
 
 	fclose(fp);
 }

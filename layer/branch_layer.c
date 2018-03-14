@@ -82,3 +82,8 @@ layer_t *branch_layer(int in, net_t *n, int offset, ...)
 
     return (layer_t *)me;
 }
+
+int is_branch_layer(layer_t *l)
+{
+    return l->func == &branch_func;
+}
