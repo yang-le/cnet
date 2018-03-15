@@ -12,16 +12,8 @@
 #endif
 #include "mnist.h"
 #include "net.h"
+#include "layers.h"
 #include "log.h"
-#include "fc_layer.h"
-#include "softmax_layer.h"
-#include "cee_layer.h"
-#include "conv_layer.h"
-#include "pooling_layer.h"
-#include "relu_layer.h"
-#include "dropout_layer.h"
-#include "normalization_layer.h"
-#include "scale_layer.h"
 
 static idx_t *images = NULL;
 static idx_t *labels = NULL;

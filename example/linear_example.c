@@ -1,7 +1,6 @@
 #include "net.h"
+#include "layers.h"
 #include "log.h"
-#include "fc_layer.h"
-#include "mse_layer.h"
 #include <memory.h>
 
 static void feed_data(net_t *n)
