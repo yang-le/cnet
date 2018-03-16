@@ -17,3 +17,6 @@
 #include "relu_layer.h"
 
 #include "softmax_layer.h"
+
+#include "branch_layer.h"
+#include "merge_layer.h"
