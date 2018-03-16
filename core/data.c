@@ -195,3 +195,33 @@ void data_save(const data_t *data, FILE *fp)
         fwrite(data->val, sizeof(data_val_t), data->size, fp);
     }
 }
+#ifdef USE_OPENCV
+void cv_data_show(char *window, int delay, data_t *data, CvMat *cvdata, int offset, int iw, int ih, int ow, int oh)
+{
+    CvMat temp;
+
+    if (!cvGetWindowHandle(window))
+    {
+        cvNamedWindow(window, CV_WINDOW_AUTOSIZE);
+    }
+
+    cvInitMatHeader(&temp, ih, iw, CV_32FC1, data->val + offset, CV_AUTOSTEP);
+
+    if ((iw == ow) && (ih == oh))
+    {
+        cvShowImage(window, &temp);
+    }
+    else
+    {
+        if ((!cvdata) || (cvdata->cols != ow) || (cvdata->rows != oh))
+        {
+            cvReleaseMat(&cvdata);
+            cvdata = cvCreateMat(oh, ow, CV_32FC1);
+        }
+
+        cvResize(&temp, cvdata, CV_INTER_LINEAR);
+        cvShowImage(window, cvdata);
+    }
+    cvWaitKey(delay);
+}
+#endif

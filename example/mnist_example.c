@@ -6,10 +6,6 @@
 #ifdef USE_CUDA
 #include "cudahelper.h"
 #endif
-#ifdef USE_OPENCV
-#include <cv.h>
-#include <highgui.h>
-#endif
 #include "mnist.h"
 #include "net.h"
 #include "layers.h"
@@ -79,24 +75,6 @@ int main(int argc, char **argv)
 
 	NET_FINISH(n);
 
-#ifdef USE_OPENCV
-	CvMat M[10];
-	cvInitMatHeader(&M[0], 10 * 28, 28, CV_32FC1, n->layer[0]->in.val, 28 * sizeof(data_val_t));
-	cvNamedWindow("input", CV_WINDOW_AUTOSIZE);
-	cvInitMatHeader(&M[1], 10 * 28, 28, CV_32FC1, n->layer[1]->in.val, 28 * sizeof(data_val_t));
-	cvNamedWindow("conv1", CV_WINDOW_AUTOSIZE);
-	cvInitMatHeader(&M[2], 10 * 28, 28, CV_32FC1, n->layer[2]->in.val, 28 * sizeof(data_val_t));
-	cvNamedWindow("relu1", CV_WINDOW_AUTOSIZE);
-	cvInitMatHeader(&M[3], 10 * 14, 14, CV_32FC1, n->layer[3]->in.val, 14 * sizeof(data_val_t));
-	cvNamedWindow("pool1", CV_WINDOW_AUTOSIZE);
-	cvInitMatHeader(&M[4], 10 * 14, 14, CV_32FC1, n->layer[4]->in.val, 14 * sizeof(data_val_t));
-	cvNamedWindow("conv2", CV_WINDOW_AUTOSIZE);
-	cvInitMatHeader(&M[5], 10 * 14, 14, CV_32FC1, n->layer[5]->in.val, 14 * sizeof(data_val_t));
-	cvNamedWindow("relu2", CV_WINDOW_AUTOSIZE);
-	cvInitMatHeader(&M[6], 10 * 7, 7, CV_32FC1, n->layer[6]->in.val, 7 * sizeof(data_val_t));
-	cvNamedWindow("pool2", CV_WINDOW_AUTOSIZE);
-#endif
-
 	images = mnist_open(argv[1]);
 	labels = mnist_open(argv[2]);
 
@@ -120,19 +98,12 @@ int main(int argc, char **argv)
 				int truth = arg_max(&LAST_LAYER(n)->extra.val[b * 10], 10);
 				if (predict != truth)
 				{
-					cvRectangle(&M[0], cvPoint(0, b * 28), cvPoint(27, b * 28 + 27), cvScalar(255, 255, 255, 255), 1, 8, 0);
+					//cvRectangle(&M[0], cvPoint(0, b * 28), cvPoint(27, b * 28 + 27), cvScalar(255, 255, 255, 255), 1, 8, 0);
 					LOG("%d ", predict);
 				}
 			}
 			LOG("\n");
-			cvShowImage("input", &M[0]);
-			cvShowImage("conv1", &M[1]);
-			cvShowImage("relu1", &M[2]);
-			cvShowImage("pool1", &M[3]);
-			cvShowImage("conv2", &M[4]);
-			cvShowImage("relu2", &M[5]);
-			cvShowImage("pool2", &M[6]);
-			cvWaitKey(200);
+			CV_DATA_SHOW_VAL("input", 100, &n->layer[0]->in, 0, 28, 10 * 28, 28, 10 * 28);
 #endif
 			for (int b = 0; b < n->batch; ++b)
 				right += (arg_max(&LAST_LAYER(n)->in.val[b * 10], 10) == arg_max(&LAST_LAYER(n)->extra.val[b * 10], 10));

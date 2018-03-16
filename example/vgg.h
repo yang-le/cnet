@@ -23,6 +23,7 @@
     NET_ADD(n, fc_layer(0, 1000, FILLER_MSRA, 0.5, 0)); \
     NET_ADD(n, relu_layer(0));                          \
     NET_ADD(n, softmax_layer(0));                       \
+    NET_ADD(n, cee_layer(0));                           \
     NET_FINISH(n)
 
 #define NET_CREATE_VGG_A(n, train, batch)       \

@@ -104,7 +104,7 @@ layer_t *conv_layer(int ic, int iw, int ih, int oc, int ow, int oh, int k, int s
 	conv_layer_t *conv = (conv_layer_t *)alloc(1, sizeof(conv_layer_t));
 
 	conv->l.func = &conv_func;
-	layer_set_weight_filler(&conv->l, filler, p0, p1);
+	layer_set_filler(&conv->l.weight_filler, filler, p0, p1);
 
 	conv->ic = ic;
 	conv->iw = iw;
