@@ -42,6 +42,6 @@ static const layer_func_t scale_func = {
 layer_t *scale_layer(int in, int filler, float p0, float p1)
 {
 	layer_t *l = layer(in, in, in, in, 0, &scale_func);
-	layer_set_weight_filler(l, filler, p0, p1);
+	layer_set_filler(&l->weight_filler, filler, p0, p1);
 	return l;
 }

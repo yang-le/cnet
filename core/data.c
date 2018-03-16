@@ -196,29 +196,31 @@ void data_save(const data_t *data, FILE *fp)
     }
 }
 #ifdef USE_OPENCV
-void cv_data_show_val(char *window, int delay, data_t *data, int offset, int iw, int ih, int ow, int oh)
+void cv_data_show(char *window, int delay, data_t *data, CvMat *cvdata, int offset, int iw, int ih, int ow, int oh)
 {
+    CvMat temp;
+
     if (!cvGetWindowHandle(window))
     {
         cvNamedWindow(window, CV_WINDOW_AUTOSIZE);
     }
 
-    cvInitMatHeader(&data->cvval.mat, ih, iw, CV_32FC1, data->val + offset, CV_AUTOSTEP);
+    cvInitMatHeader(&temp, ih, iw, CV_32FC1, data->val + offset, CV_AUTOSTEP);
 
     if ((iw == ow) && (ih == oh))
     {
-        cvShowImage(window, &data->cvval.mat);
+        cvShowImage(window, &temp);
     }
     else
     {
-        if ((!data->cvval.disp) || (data->cvval.disp->cols != ow) || (data->cvval.disp->rows != oh))
+        if ((!cvdata) || (cvdata->cols != ow) || (cvdata->rows != oh))
         {
-            cvReleaseMat(&data->cvval.disp);
-            data->cvval.disp = cvCreateMat(oh, ow, CV_32FC1);
+            cvReleaseMat(&cvdata);
+            cvdata = cvCreateMat(oh, ow, CV_32FC1);
         }
 
-        cvResize(&data->cvval.mat, data->cvval.disp, CV_INTER_LINEAR);
-        cvShowImage(window, data->cvval.disp);
+        cvResize(&temp, cvdata, CV_INTER_LINEAR);
+        cvShowImage(window, cvdata);
     }
     cvWaitKey(delay);
 }

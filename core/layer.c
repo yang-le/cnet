@@ -17,6 +17,33 @@ layer_t *layer(int in, int out, int weight, int bias, int extra, const layer_fun
 	return l;
 }
 
+static void layer_fill_data(data_filler_t *filler, data_t *data, int insize, int outsize)
+{
+	switch (filler->method)
+	{
+	case FILLER_CONST:
+		for (int i = 0; i < data->size; ++i)
+			data->val[i] = filler->param[0];
+	case FILLER_GAUSS:
+		normal(data->val, data->size, filler->param[0], filler->param[1]);
+		break;
+	case FILLER_UNIFORM:
+		uniform(data->val, data->size, filler->param[0], filler->param[1]);
+		break;
+	case FILLER_XAVIER:
+		uniform(data->val, data->size,
+				-sqrt(3 / (filler->param[0] * insize + (1 - filler->param[0]) * outsize)),
+				sqrt(3 / (filler->param[0] * insize + (1 - filler->param[0]) * outsize)));
+		break;
+	case FILLER_MSRA:
+		normal(data->val, data->size, 0,
+			   sqrt(2 / (filler->param[0] * insize + (1 - filler->param[0]) * outsize)));
+		break;
+	default:
+		break;
+	}
+}
+
 size_t layer_data_init(layer_t *l, data_val_t *buf, int level)
 {
 	data_val_t *start = buf;
@@ -27,67 +54,15 @@ size_t layer_data_init(layer_t *l, data_val_t *buf, int level)
 	buf += data_init(&l->extra, buf, 0, 1);
 	/*  buf += */ data_init(&l->out, buf, level, l->n->batch);
 
-	switch (l->weight_filler.method)
-	{
-	case FILLER_CONST:
-		for (int i = 0; i < l->weight.size; ++i)
-			l->weight.val[i] = l->weight_filler.param[0];
-	case FILLER_GAUSS:
-		normal(l->weight.val, l->weight.size, l->weight_filler.param[0], l->weight_filler.param[1]);
-		break;
-	case FILLER_UNIFORM:
-		uniform(l->weight.val, l->weight.size, l->weight_filler.param[0], l->weight_filler.param[1]);
-		break;
-	case FILLER_XAVIER:
-		uniform(l->weight.val, l->weight.size,
-				-sqrt(3 / (l->weight_filler.param[0] * l->in.size + (1 - l->weight_filler.param[0]) * l->out.size)),
-				sqrt(3 / (l->weight_filler.param[0] * l->in.size + (1 - l->weight_filler.param[0]) * l->out.size)));
-		break;
-	case FILLER_MSRA:
-		normal(l->weight.val, l->weight.size, 0,
-			   sqrt(2 / (l->weight_filler.param[0] * l->in.size + (1 - l->weight_filler.param[0]) * l->out.size)));
-		break;
-	default:
-		break;
-	}
-
-	switch (l->bias_filler.method)
-	{
-	case FILLER_CONST:
-		for (int i = 0; i < l->bias.size; ++i)
-			l->bias.val[i] = l->bias_filler.param[0];
-	case FILLER_GAUSS:
-		normal(l->bias.val, l->bias.size, l->bias_filler.param[0], l->bias_filler.param[1]);
-		break;
-	case FILLER_UNIFORM:
-		uniform(l->bias.val, l->bias.size, l->bias_filler.param[0], l->bias_filler.param[1]);
-		break;
-	case FILLER_XAVIER:
-		uniform(l->bias.val, l->bias.size,
-				-sqrt(3 / (l->bias_filler.param[0] * l->in.size + (1 - l->bias_filler.param[0]) * l->out.size)),
-				sqrt(3 / (l->bias_filler.param[0] * l->in.size + (1 - l->bias_filler.param[0]) * l->out.size)));
-		break;
-	case FILLER_MSRA:
-		normal(l->bias.val, l->bias.size, 0,
-			   sqrt(2 / (l->bias_filler.param[0] * l->in.size + (1 - l->bias_filler.param[0]) * l->out.size)));
-		break;
-	default:
-		break;
-	}
+	layer_fill_data(&l->weight_filler, &l->weight, l->in.size, l->out.size);
+	layer_fill_data(&l->bias_filler, &l->bias, l->in.size, l->out.size);
 
 	return buf - start;
 }
 
-void layer_set_weight_filler(layer_t *l, int method, data_val_t p0, data_val_t p1)
+void layer_set_filler(data_filler_t *filler, int method, data_val_t p0, data_val_t p1)
 {
-	l->weight_filler.method = method;
-	l->weight_filler.param[0] = p0;
-	l->weight_filler.param[1] = p1;
-}
-
-void layer_set_bias_filler(layer_t *l, int method, data_val_t p0, data_val_t p1)
-{
-	l->bias_filler.method = method;
-	l->bias_filler.param[0] = p0;
-	l->bias_filler.param[1] = p1;
+	filler->method = method;
+	filler->param[0] = p0;
+	filler->param[1] = p1;
 }
