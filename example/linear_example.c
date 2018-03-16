@@ -2,6 +2,9 @@
 #include "layers.h"
 #include "log.h"
 #include <memory.h>
+#ifdef USE_GFLAGS
+#include "flags.h"
+#endif
 
 static void feed_data(net_t *n)
 {
@@ -16,7 +19,9 @@ int main(int argc, char **argv)
 {
 	int i = 0;
 	float rate = 1e-1;
-
+#ifdef USE_GFLAGS
+	gflags_parse(&argc, &argv);
+#endif
 	net_t *n = net_create(2, TRAIN_SGD, 4);
 
 	net_add(n, fc_layer(1, 1, FILLER_CONST, 0, 0));
