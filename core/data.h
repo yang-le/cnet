@@ -52,6 +52,10 @@ typedef struct
 
 #define DEFAULT_ADAM_RATE 0.001
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 size_t data_init(data_t *data, data_val_t *buf, int level, int batch);
 
 void data_update_nesterov(data_t *data);
@@ -73,4 +77,8 @@ void cl_data_unmap(cl_data_val_t *data);
 void cv_data_show(char *window, int delay, data_t *data, CvMat *cvdata, int offset, int iw, int ih, int ow, int oh);
 #define CV_DATA_SHOW_VAL(window, delay, data, offset, iw, ih, ow, oh) cv_data_show(window, delay, data, (data)->cvval, offset, iw, ih, ow, oh)
 #define CV_DATA_SHOW_GRAD(window, delay, data, offset, iw, ih, ow, oh) cv_data_show(window, delay, data, (data)->cvgrad, offset, iw, ih, ow, oh)
+#endif
+
+#ifdef __cplusplus
+}
 #endif

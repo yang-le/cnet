@@ -19,4 +19,12 @@ typedef struct
 	int p; // padding
 } conv_layer_t;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 layer_t *conv_layer(int ic, int iw, int ih, int oc, int ow, int oh, int k, int s, int p, int filler, float p0, float p1);
+
+#ifdef __cplusplus
+}
+#endif

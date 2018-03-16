@@ -5,22 +5,24 @@
 
 struct layer;
 
+typedef enum
+{
+	TRAIN_FORWARD,
+	TRAIN_SGD,
+	TRAIN_MOMENTUM,
+	TRAIN_NESTEROV,
+	TRAIN_ADAGRAD,
+	TRAIN_ADADELTA,
+	TRAIN_ADAM,
+	TRAIN_MAX
+} train_method_t;
+
 typedef struct net
 {
 	struct layer **layer;
 	int size;
 	int train;
-	enum
-	{
-		TRAIN_FORWARD,
-		TRAIN_SGD,
-		TRAIN_MOMENTUM,
-		TRAIN_NESTEROV,
-		TRAIN_ADAGRAD,
-		TRAIN_ADADELTA,
-		TRAIN_ADAM,
-		TRAIN_MAX
-	} method;
+	train_method_t method;
 	int batch;
 	int t;
 	float rate;
@@ -52,6 +54,10 @@ typedef void feed_func_t(net_t *n);
 	}                  \
 	}
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 net_t *net_create(int size, int method, int batch);
 void net_add(net_t *n, struct layer *l);
 void net_finish(net_t *n);
@@ -65,3 +71,7 @@ void net_train(net_t *n, feed_func_t feed, float rate);
 
 void net_param_save(net_t *n, const char *file);
 void net_param_load(net_t *n, const char *file);
+
+#ifdef __cplusplus
+}
+#endif

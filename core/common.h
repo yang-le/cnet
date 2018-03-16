@@ -8,5 +8,13 @@
 #define CNET_INLINE inline
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void* alloc(size_t n, size_t size);
 size_t get_alloc_size(void);
+
+#ifdef __cplusplus
+}
+#endif
