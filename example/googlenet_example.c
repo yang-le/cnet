@@ -58,21 +58,31 @@ int main(int argc, char **argv)
 
 	NET_CREATE(n, TRAIN_SGD, 10);
 
-	NET_ADD(n, conv_layer(1, 28, 28, 32, 28, 28, 5, 0, 0, FILLER_MSRA, 0.5, 0));
+	NET_ADD(n, conv_layer(3, 224, 224, 64, 112, 112, 7, 2, 3, FILLER_XAVIER, 0.5, 0));
 	NET_ADD(n, relu_layer(0));
-	NET_ADD(n, max_pooling_layer(32, 28, 28, 14, 14, 2, 0, 0));
+	NET_ADD(n, max_pooling_layer(64, 112, 112, 56, 56, 3, 2, 0));
 
-	NET_ADD(n, conv_layer(32, 14, 14, 192, 14, 14, 5, 0, 0, FILLER_MSRA, 0.5, 0));
+	NET_ADD(n, conv_layer(64, 56, 56, 192, 56, 56, 3, 1, 0, FILLER_XAVIER, 0.5, 0));
 	NET_ADD(n, relu_layer(0));
-	NET_ADD(n, max_pooling_layer(192, 14, 14, 7, 7, 2, 0, 0));
+	NET_ADD(n, max_pooling_layer(192, 56, 56, 28, 28, 3, 2, 0));
 
-	NET_ADD_INCEPTION_V1(n, 192, 7, 7, 7, 7, 64, 96, 128, 16, 32, 32);
+	NET_ADD_INCEPTION_V1(n, 192, 28, 28, 28, 28, 64, 96, 128, 16, 32, 32, FILLER_XAVIER, 0.5, 0);
+	NET_ADD_INCEPTION_V1(n, 256, 28, 28, 28, 28, 128, 128, 192, 32, 96, 64, FILLER_XAVIER, 0.5, 0);
+	NET_ADD(n, max_pooling_layer(480, 28, 28, 14, 14, 3, 2, 0));
 
-	NET_ADD(n, fc_layer(0, 1024, FILLER_MSRA, 0.5, 0));
-	NET_ADD(n, relu_layer(0));
+	NET_ADD_INCEPTION_V1(n, 480, 14, 14, 14, 14, 192, 96, 208, 16, 48, 64, FILLER_XAVIER, 0.5, 0);
+	NET_ADD_INCEPTION_V1(n, 512, 14, 14, 14, 14, 160, 112, 224, 24, 64, 64, FILLER_XAVIER, 0.5, 0);
+	NET_ADD_INCEPTION_V1(n, 512, 14, 14, 14, 14, 128, 128, 256, 24, 64, 64, FILLER_XAVIER, 0.5, 0);
+	NET_ADD_INCEPTION_V1(n, 512, 14, 14, 14, 14, 112, 144, 288, 32, 64, 64, FILLER_XAVIER, 0.5, 0);
+	NET_ADD_INCEPTION_V1(n, 528, 14, 14, 14, 14, 256, 160, 320, 32, 128, 128, FILLER_XAVIER, 0.5, 0);
+	NET_ADD(n, max_pooling_layer(832, 14, 14, 7, 7, 3, 2, 0));
+
+	NET_ADD_INCEPTION_V1(n, 832, 7, 7, 7, 7, 256, 160, 320, 32, 128, 128, FILLER_XAVIER, 0.5, 0);
+	NET_ADD_INCEPTION_V1(n, 832, 7, 7, 7, 7, 384, 192, 384, 48, 128, 128, FILLER_XAVIER, 0.5, 0);
+	NET_ADD(n, avg_pooling_layer(1024, 7, 7, 1, 1, 7, 1, 0));
 	NET_ADD(n, dropout_layer(0, 0.6));
 
-	NET_ADD(n, fc_layer(0, 10, FILLER_MSRA, 0.5, 0));
+	NET_ADD(n, fc_layer(0, 1000, FILLER_XAVIER, 0.5, 0));
 	NET_ADD(n, softmax_layer(0));
 	NET_ADD(n, cee_layer(0));
 
