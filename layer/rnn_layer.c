@@ -3,6 +3,7 @@
 #include "gemm.h"
 #include "common.h"
 #include <memory.h>
+#include <math.h>
 
 static void rnn_layer_prepare(layer_t *l)
 {
@@ -26,14 +27,14 @@ static void rnn_layer_forward(layer_t *l)
     int k = l->in.size / rnn->len;
     int n = l->out.size / rnn->len;
 
+    // extra hold prev state
+    memcpy(l->extra.val, l->out.val, rnn->len * m * n * sizeof(data_val_t));
+
     for (t = 0; t < rnn->len; ++t)
     {
         int in_offset = t * m * k;
         int out_offset = t * m * n;
         int extra_offset = out_offset;
-
-        // extra hold prev state
-        memcpy(l->extra.val, l->out.val, rnn->len * m * n * sizeof(data_val_t));
 
         gemm(0, 1, m, n, k, 1, &l->in.val, in_offset, k, &l->weight.val, 0, k, 0, &l->out.val, out_offset, n);
         gemm(0, 1, m, n, n, 1, &l->extra.val, extra_offset, n, &l->weight.val, k * n, n, 1, &l->out.val, out_offset, n);
@@ -41,7 +42,7 @@ static void rnn_layer_forward(layer_t *l)
         for (b = 0; b < m; ++b)
             for (i = 0; i < n; ++i)
             {
-                l->out.val[out_offset + b * n + i] += l->bias.val[i];
+                l->out.val[out_offset + b * n + i] = tanh(l->out.val[out_offset + b * n + i] + l->bias.val[i]);
             }
     }
 }
@@ -69,6 +70,8 @@ static void rnn_layer_backward(layer_t *l)
         for (b = 0; b < k; ++b)
             for (i = 0; i < m; ++i)
             {
+                l->out.grad[out_offset + b * m + i] *= 1 - l->out.val[out_offset + b * m + i] * l->out.val[out_offset + b * m + i];
+                l->extra.grad[extra_grad_offset + b * m + i] *= 1 - l->extra.val[extra_val_offset + b * m + i] * l->extra.val[extra_val_offset + b * m + i];
                 l->out.grad[out_offset + b * m + i] += l->extra.grad[extra_grad_offset + b * m + i];
             }
 
