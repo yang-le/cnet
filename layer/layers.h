@@ -14,6 +14,7 @@
 
 // activation layers
 #include "sigmoid_layer.h"
+#include "tanh_layer.h"
 #include "relu_layer.h"
 
 #include "softmax_layer.h"
