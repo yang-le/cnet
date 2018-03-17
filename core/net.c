@@ -52,7 +52,7 @@ void net_finish(net_t *n)
 		extra_size += n->layer[i]->extra.size;
 	}
 
-	total_size = (n->layer[0]->in.size * n->batch + param_size + out_size * n->batch) * (level[n->method] + 1) + extra_size;
+	total_size = (n->layer[0]->in.size + out_size) * ((n->method != TRAIN_FORWARD) + 1) * n->batch + param_size * (level[n->method] + 1) + extra_size;
 	data_buf = (data_val_t *)alloc(total_size, sizeof(data_val_t));
 	if (data_buf == NULL)
 	{

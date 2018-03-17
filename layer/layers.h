@@ -21,3 +21,6 @@
 
 #include "branch_layer.h"
 #include "merge_layer.h"
+
+// rnn
+#include "rnn_layer.h"

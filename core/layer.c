@@ -48,7 +48,7 @@ size_t layer_data_init(layer_t *l, data_val_t *buf, int level)
 {
 	data_val_t *start = buf;
 
-	buf += data_init(&l->in, buf, level, l->n->batch);
+	buf += data_init(&l->in, buf, level > 0, l->n->batch);
 	buf += data_init(&l->weight, buf, level, 1);
 	buf += data_init(&l->bias, buf, level, 1);
 	buf += data_init(&l->extra, buf, 0, 1);
