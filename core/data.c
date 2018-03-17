@@ -4,7 +4,7 @@
 
 void data_update_nesterov(data_t *data)
 {
-    const double ALPHA = 0.9;
+    const data_val_t ALPHA = 0.9;
 
     int j = 0;
 
@@ -14,7 +14,7 @@ void data_update_nesterov(data_t *data)
     }
 }
 
-void data_update_sgd(data_t *data, double rate)
+void data_update_sgd(data_t *data, data_val_t rate)
 {
     int j = 0;
 
@@ -25,9 +25,9 @@ void data_update_sgd(data_t *data, double rate)
     }
 }
 
-void data_update_momentum(data_t *data, double rate)
+void data_update_momentum(data_t *data, data_val_t rate)
 {
-    const double ALPHA = 0.9;
+    const data_val_t ALPHA = 0.9;
 
     int j = 0;
 
@@ -39,9 +39,9 @@ void data_update_momentum(data_t *data, double rate)
     }
 }
 
-void data_update_adagrad(data_t *data, double rate)
+void data_update_adagrad(data_t *data, data_val_t rate)
 {
-    const double EPSILON = 1e-7;
+    const data_val_t EPSILON = 1e-7;
 
     int j = 0;
 
@@ -53,10 +53,10 @@ void data_update_adagrad(data_t *data, double rate)
     }
 }
 
-void data_update_adadelta(data_t *data, double rate)
+void data_update_adadelta(data_t *data, data_val_t rate)
 {
-    const double BETA = 0.5;
-    const double EPSILON = 1e-6;
+    const data_val_t BETA = 0.5;
+    const data_val_t EPSILON = 1e-6;
 
     int j = 0;
 
@@ -68,11 +68,11 @@ void data_update_adadelta(data_t *data, double rate)
     }
 }
 
-void data_update_adam(data_t *data, double rate, int t)
+void data_update_adam(data_t *data, data_val_t rate, int t)
 {
-    const double BETA1 = 0.9;
-    const double BETA2 = 0.999;
-    const double EPSILON = 1e-8;
+    const data_val_t BETA1 = 0.9;
+    const data_val_t BETA2 = 0.999;
+    const data_val_t EPSILON = 1e-8;
 
     int j = 0;
 

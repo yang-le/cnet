@@ -5,8 +5,7 @@
 
 struct layer;
 
-typedef enum
-{
+typedef enum {
 	TRAIN_FORWARD,
 	TRAIN_SGD,
 	TRAIN_MOMENTUM,
@@ -25,7 +24,7 @@ typedef struct net
 	train_method_t method;
 	int batch;
 	int t;
-	float rate;
+	data_val_t rate;
 } net_t;
 
 typedef void feed_func_t(net_t *n);
@@ -67,7 +66,7 @@ void net_forward(net_t *n);
 void net_backward(net_t *n);
 void net_update(net_t *n);
 
-void net_train(net_t *n, feed_func_t feed, float rate);
+void net_train(net_t *n, feed_func_t feed, data_val_t rate);
 
 void net_param_save(net_t *n, const char *file);
 void net_param_load(net_t *n, const char *file);

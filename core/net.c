@@ -8,6 +8,7 @@
 #include "random.h"
 #include "common.h"
 #include "branch_layer.h"
+#include "rnn_layer.h"
 
 net_t *net_create(int size, int method, int batch)
 {
@@ -97,7 +98,7 @@ void net_backward(net_t *n)
 void net_update(net_t *n)
 {
 	int i = 0;
-	void (*update[TRAIN_MAX])(data_t *, double) = {
+	void (*update[TRAIN_MAX])(data_t *, data_val_t) = {
 		NULL,
 		data_update_sgd,
 		data_update_momentum,
@@ -109,11 +110,8 @@ void net_update(net_t *n)
 	if (update[n->method])
 		for (i = 0; i < n->size; ++i)
 		{
-			if (!is_branch_layer(n->layer[i]))
+			if (is_branch_layer(n->layer[i]))
 			{
-				update[n->method](&n->layer[i]->weight, n->rate);
-				update[n->method](&n->layer[i]->bias, n->rate);
-			} else {
 				branch_layer_t *me = (branch_layer_t *)n->layer[i];
 				for (int j = 0; j < me->num; ++j)
 				{
@@ -121,21 +119,40 @@ void net_update(net_t *n)
 					net_update(me->branch[j].n);
 				}
 			}
+			else if (is_rnn_layer(n->layer[i]))
+			{
+				rnn_layer_t *rnn = (rnn_layer_t *)n->layer[i];
+				update[n->method](&n->layer[i]->weight, n->rate / rnn->len);
+				update[n->method](&n->layer[i]->bias, n->rate / rnn->len);
+			}
+			else
+			{
+				update[n->method](&n->layer[i]->weight, n->rate);
+				update[n->method](&n->layer[i]->bias, n->rate);
+			}
 		}
 	else if (n->method == TRAIN_ADAM)
 		for (i = 0; i < n->size; ++i)
 		{
-			if (!is_branch_layer(n->layer[i]))
+			if (is_branch_layer(n->layer[i]))
 			{
-				data_update_adam(&n->layer[i]->weight, n->rate, n->t);
-				data_update_adam(&n->layer[i]->bias, n->rate, n->t++);
-			} else {
 				branch_layer_t *me = (branch_layer_t *)n->layer[i];
 				for (int j = 0; j < me->num; ++j)
 				{
 					me->branch[j].n->rate = n->rate;
 					net_update(me->branch[j].n);
 				}
+			}
+			else if (is_rnn_layer(n->layer[i]))
+			{
+				rnn_layer_t *rnn = (rnn_layer_t *)n->layer[i];
+				data_update_adam(&n->layer[i]->weight, n->rate / rnn->len, n->t);
+				data_update_adam(&n->layer[i]->bias, n->rate / rnn->len, n->t++);
+			}
+			else
+			{
+				data_update_adam(&n->layer[i]->weight, n->rate, n->t);
+				data_update_adam(&n->layer[i]->bias, n->rate, n->t++);
 			}
 		}
 }
@@ -154,7 +171,7 @@ void net_destroy(net_t *n)
 	free(n);
 }
 
-void net_train(net_t *n, feed_func_t feed, float rate)
+void net_train(net_t *n, feed_func_t feed, data_val_t rate)
 {
 	int i = 0, b = 0;
 
@@ -183,10 +200,12 @@ static void net_param_save_imp(net_t *n, FILE *fp)
 	for (int i = 0; i < n->size; ++i)
 	{
 		if (!is_branch_layer(n->layer[i]))
-		{	
+		{
 			data_save(&n->layer[i]->weight, fp);
 			data_save(&n->layer[i]->bias, fp);
-		} else {
+		}
+		else
+		{
 			branch_layer_t *me = (branch_layer_t *)n->layer[i];
 			for (int j = 0; j < me->num; ++j)
 			{
@@ -213,7 +232,9 @@ static void net_param_load_imp(net_t *n, FILE *fp)
 		{
 			data_load(fp, &n->layer[i]->weight);
 			data_load(fp, &n->layer[i]->bias);
-		} else {
+		}
+		else
+		{
 			branch_layer_t *me = (branch_layer_t *)n->layer[i];
 			for (int j = 0; j < me->num; ++j)
 			{
