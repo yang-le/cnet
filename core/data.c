@@ -2,6 +2,27 @@
 #include "log.h"
 #include <math.h>
 
+void data_grad_clipping(data_t *data, data_val_t theta)
+{
+    int j = 0;
+    data_val_t norm = 0;
+
+    for (j = 0; j < data->size; ++j)
+    {
+        norm += data->grad[j] * data->grad[j];
+    }
+
+    norm = sqrt(norm);
+
+    if (norm > theta)
+    {
+        for (j = 0; j < data->size; ++j)
+        {
+            data->grad[j] *= theta / norm;
+        }
+    }
+}
+
 void data_update_nesterov(data_t *data)
 {
     const data_val_t ALPHA = 0.9;

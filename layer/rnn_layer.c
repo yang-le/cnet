@@ -12,7 +12,8 @@ static void rnn_layer_prepare(layer_t *l)
     l->extra.size *= ((l->n->method != TRAIN_FORWARD) + 1) * l->n->batch;
     l->weight.size = ((l->in.size + l->out.size) / rnn->len + rnn->state) * rnn->state;
 
-    LOG("rnn_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->weight.size + l->bias.size);
+    LOG("rnn_layer: (%d => %d => %d) x %d, param %d\n",
+        l->in.size / rnn->len, rnn->state, l->out.size / rnn->len, rnn->len, l->weight.size + l->bias.size);
 }
 
 static void rnn_layer_forward(layer_t *l)
@@ -32,13 +33,13 @@ static void rnn_layer_forward(layer_t *l)
     int out_weight_offset = extra_weight_offset + self * self;
     int prev_extra_offset = self;
 
-    // extra hold prev state
-    memcpy(l->extra.val + prev_extra_offset, l->extra.val, self * sizeof(data_val_t));
-
     for (t = 0; t < rnn->len; ++t)
     {
         int in_offset = t * batch * in;
         int out_offset = t * batch * out;
+
+        // extra hold prev state
+        memcpy(l->extra.val + prev_extra_offset, l->extra.val, self * sizeof(data_val_t));
 
         gemm(0, 1, batch, self, in, 1, &l->in.val, in_offset, in, &l->weight.val, 0, in, 0, &l->extra.val, 0, self);
         gemm(0, 1, batch, self, self, 1, &l->extra.val, prev_extra_offset, self, &l->weight.val, extra_weight_offset, self, 1, &l->extra.val, 0, self);
@@ -49,7 +50,7 @@ static void rnn_layer_forward(layer_t *l)
                 l->extra.val[b * self + i] = tanh(l->extra.val[b * self + i] + l->bias.val[i]);
             }
 
-        gemm(0, 1, batch, out, self, 1, &l->extra.val, 0, self, &l->weight.val, out_weight_offset, self, 1, &l->out.val, out_offset, out);
+        gemm(0, 1, batch, out, self, 1, &l->extra.val, 0, self, &l->weight.val, out_weight_offset, self, 0, &l->out.val, out_offset, out);
 
         for (b = 0; b < batch; ++b)
             for (i = 0; i < out; ++i)

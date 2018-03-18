@@ -87,3 +87,6 @@ target_link_libraries(vgg_example cnet)
 
 add_executable(googlenet_example example/googlenet_example.c example/mnist.c)
 target_link_libraries(googlenet_example cnet)
+
+add_executable(rnn_example example/rnn_example.c example/mnist.c)
+target_link_libraries(rnn_example cnet)

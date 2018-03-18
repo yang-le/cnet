@@ -58,6 +58,8 @@ extern "C" {
 
 size_t data_init(data_t *data, data_val_t *buf, int level, int batch);
 
+void data_grad_clipping(data_t *data, data_val_t theta);
+
 void data_update_nesterov(data_t *data);
 void data_update_sgd(data_t *data, data_val_t rate);
 void data_update_momentum(data_t *data, data_val_t rate);

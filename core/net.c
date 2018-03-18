@@ -107,6 +107,12 @@ void net_update(net_t *n)
 		data_update_adadelta,
 		NULL};
 
+	for (i = 0; i < n->size; ++i)
+	{
+		data_grad_clipping(&n->layer[i]->weight, 5);
+		data_grad_clipping(&n->layer[i]->bias, 5);
+	}
+
 	if (update[n->method])
 		for (i = 0; i < n->size; ++i)
 		{
