@@ -10,7 +10,7 @@ static void rnn_layer_prepare(layer_t *l)
     rnn_layer_t *rnn = (rnn_layer_t *)l;
 
     l->extra.size *= ((l->n->method != TRAIN_FORWARD) + 1) * l->n->batch;
-    l->weight.size = (l->in.size + l->out.size) / rnn->len * l->out.size / rnn->len;
+    l->weight.size = ((l->in.size + l->out.size) / rnn->len + rnn->state) * rnn->state;
 
     LOG("rnn_layer: in %d, out %d, param %d\n", l->in.size, l->out.size, l->weight.size + l->bias.size);
 }
@@ -23,26 +23,38 @@ static void rnn_layer_forward(layer_t *l)
 
     rnn_layer_t *rnn = (rnn_layer_t *)l;
 
-    int m = l->n->batch;
-    int k = l->in.size / rnn->len;
-    int n = l->out.size / rnn->len;
+    int batch = l->n->batch;
+    int in = l->in.size / rnn->len;
+    int out = l->out.size / rnn->len;
+    int self = rnn->state;
+
+    int extra_weight_offset = in * self;
+    int out_weight_offset = extra_weight_offset + self * self;
+    int prev_extra_offset = self;
 
     // extra hold prev state
-    memcpy(l->extra.val, l->out.val, rnn->len * m * n * sizeof(data_val_t));
+    memcpy(l->extra.val + prev_extra_offset, l->extra.val, self * sizeof(data_val_t));
 
     for (t = 0; t < rnn->len; ++t)
     {
-        int in_offset = t * m * k;
-        int out_offset = t * m * n;
-        int extra_offset = out_offset;
+        int in_offset = t * batch * in;
+        int out_offset = t * batch * out;
 
-        gemm(0, 1, m, n, k, 1, &l->in.val, in_offset, k, &l->weight.val, 0, k, 0, &l->out.val, out_offset, n);
-        gemm(0, 1, m, n, n, 1, &l->extra.val, extra_offset, n, &l->weight.val, k * n, n, 1, &l->out.val, out_offset, n);
+        gemm(0, 1, batch, self, in, 1, &l->in.val, in_offset, in, &l->weight.val, 0, in, 0, &l->extra.val, 0, self);
+        gemm(0, 1, batch, self, self, 1, &l->extra.val, prev_extra_offset, self, &l->weight.val, extra_weight_offset, self, 1, &l->extra.val, 0, self);
 
-        for (b = 0; b < m; ++b)
-            for (i = 0; i < n; ++i)
+        for (b = 0; b < batch; ++b)
+            for (i = 0; i < self; ++i)
             {
-                l->out.val[out_offset + b * n + i] = tanh(l->out.val[out_offset + b * n + i] + l->bias.val[i]);
+                l->extra.val[b * self + i] = tanh(l->extra.val[b * self + i] + l->bias.val[i]);
+            }
+
+        gemm(0, 1, batch, out, self, 1, &l->extra.val, 0, self, &l->weight.val, out_weight_offset, self, 1, &l->out.val, out_offset, out);
+
+        for (b = 0; b < batch; ++b)
+            for (i = 0; i < out; ++i)
+            {
+                l->out.val[out_offset + b * out + i] += l->bias.val[self + i];
             }
     }
 }
@@ -55,45 +67,49 @@ static void rnn_layer_backward(layer_t *l)
 
     rnn_layer_t *rnn = (rnn_layer_t *)l;
 
+    int batch = l->n->batch;
+    int in = l->in.size / rnn->len;
+    int out = l->out.size / rnn->len;
+    int self = rnn->state;
+
+    int extra_weight_offset = in * self;
+    int extra_grad_offset = 2 * self;
+    int out_weight_offset = extra_weight_offset + self * self;
+    int prev_extra_offset = self;
+    int prev_extra_grad_offset = extra_grad_offset + prev_extra_offset;
+
     for (t = rnn->len - 1; t >= 0; --t)
     {
-        int m = l->out.size / rnn->len;
-        int k = l->n->batch;
-        int n = l->in.size / rnn->len;
+        int in_offset = t * batch * in;
+        int out_offset = t * batch * out;
 
-        int in_offset = t * k * n;
-        int out_offset = t * k * m;
-        int extra_val_offset = out_offset;
-        int extra_grad_offset = rnn->len * k * m + extra_val_offset;
+        gemm(1, 0, out, self, batch, 1, &l->out.grad, out_offset, out, &l->extra.val, 0, self, 0, &l->weight.grad, out_weight_offset, self);
+        gemm(0, 0, batch, self, out, 1, &l->out.grad, out_offset, out, &l->weight.val, out_weight_offset, self, 0, &l->extra.grad, extra_grad_offset, self);
 
-        // add prev state's grad
-        for (b = 0; b < k; ++b)
-            for (i = 0; i < m; ++i)
+        for (b = 0; b < batch; ++b)
+            for (i = 0; i < out; ++i)
             {
-                l->out.grad[out_offset + b * m + i] *= 1 - l->out.val[out_offset + b * m + i] * l->out.val[out_offset + b * m + i];
-                l->extra.grad[extra_grad_offset + b * m + i] *= 1 - l->extra.val[extra_val_offset + b * m + i] * l->extra.val[extra_val_offset + b * m + i];
-                l->out.grad[out_offset + b * m + i] += l->extra.grad[extra_grad_offset + b * m + i];
+                l->bias.grad[self + i] += l->out.grad[out_offset + b * out + i];
             }
 
-        gemm(1, 0, m, n, k, 1, &l->out.grad, out_offset, m, &l->in.val, in_offset, n, 1, &l->weight.grad, 0, n);
-        gemm(1, 0, m, m, k, 1, &l->out.grad, out_offset, m, &l->extra.val, extra_val_offset, m, 1, &l->weight.grad, n * m, m);
-
-        m = l->n->batch;
-        k = l->out.size;
-        n = l->in.size;
-
-        in_offset = t * m * n;
-        out_offset = t * m * k;
-        extra_val_offset = out_offset;
-        extra_grad_offset = rnn->len * m * k + extra_val_offset;
-
-        gemm(0, 0, m, n, k, 1, &l->out.grad, out_offset, k, &l->weight.val, 0, n, 0, &l->in.grad, in_offset, n);
-        gemm(0, 0, m, k, k, 1, &l->out.grad, out_offset, k, &l->weight.val, n * k, k, 0, &l->extra.grad, extra_grad_offset, k);
-
-        for (b = 0; b < m; ++b)
-            for (i = 0; i < k; ++i)
+        // bp through tanh
+        for (b = 0; b < batch; ++b)
+            for (i = 0; i < self; ++i)
             {
-                l->bias.grad[i] += l->out.grad[out_offset + b * k + i];
+                l->extra.grad[extra_grad_offset + b * self + i] += l->extra.grad[prev_extra_grad_offset + b * self + i];
+                l->extra.grad[extra_grad_offset + b * self + i] *= 1 - l->extra.val[b * self + i] * l->extra.val[b * self + i];
+            }
+
+        gemm(1, 0, self, in, batch, 1, &l->extra.grad, 0, self, &l->in.val, in_offset, in, 0, &l->weight.grad, 0, in);
+        gemm(1, 0, self, self, batch, 1, &l->extra.grad, 0, self, &l->extra.val, prev_extra_offset, self, 0, &l->weight.grad, extra_weight_offset, self);
+
+        gemm(0, 0, batch, in, self, 1, &l->extra.grad, 0, self, &l->weight.val, 0, in, 0, &l->in.grad, in_offset, in);
+        gemm(0, 0, batch, self, self, 1, &l->extra.grad, 0, self, &l->weight.val, extra_weight_offset, self, 0, &l->extra.grad, prev_extra_grad_offset, self);
+
+        for (b = 0; b < batch; ++b)
+            for (i = 0; i < self; ++i)
+            {
+                l->bias.grad[i] += l->extra.grad[b * self + i];
             }
     }
 }
@@ -103,17 +119,18 @@ static const layer_func_t rnn_func = {
     rnn_layer_forward,
     rnn_layer_backward};
 
-layer_t *rnn_layer(int in, int out, int len, int filler, float p0, float p1)
+layer_t *rnn_layer(int in, int out, int state, int len, int filler, float p0, float p1)
 {
     rnn_layer_t *rnn = (rnn_layer_t *)alloc(1, sizeof(rnn_layer_t));
 
+    rnn->state = state;
     rnn->len = len;
 
-    rnn->l.in.size = in;
-    rnn->l.out.size = out;
-    rnn->l.weight.size = (in + out) / len * out / len;
-    rnn->l.bias.size = out / len;
-    rnn->l.extra.size = out;
+    rnn->l.in.size = in * len;
+    rnn->l.out.size = out * len;
+    rnn->l.extra.size = 2 * state;
+    rnn->l.bias.size = state + out;
+
     rnn->l.func = &rnn_func;
 
     layer_set_filler(&rnn->l.weight_filler, filler, p0, p1);
