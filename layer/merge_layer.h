@@ -10,6 +10,8 @@ typedef branch_layer_t merge_layer_t;
 extern "C" {
 #endif
 
+#define MERGE_LAYER(in, n, offset, ...) merge_layer(in, n, offset, ##__VA_ARGS__, NULL)
+
 layer_t *merge_layer(int out, net_t *n, int offset, ...);
 
 #ifdef __cplusplus

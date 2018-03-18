@@ -21,6 +21,8 @@ typedef struct
 extern "C" {
 #endif
 
+#define BRANCH_LAYER(in, n, offset, ...) branch_layer(in, n, offset, ##__VA_ARGS__, NULL)
+
 layer_t *branch_layer(int in, net_t *n, int offset, ...);
 int is_branch_layer(layer_t *l);
 
