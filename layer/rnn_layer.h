@@ -8,6 +8,7 @@ typedef struct
 
     int state;
     int len;
+    data_val_t *temp; // for output's gard
 } rnn_layer_t;
 
 #ifdef __cplusplus

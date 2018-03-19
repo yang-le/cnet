@@ -53,10 +53,33 @@ static void rnn_layer_forward(layer_t *l)
         gemm(0, 1, batch, out, self, 1, &l->extra.val, 0, self, &l->weight.val, out_weight_offset, self, 0, &l->out.val, out_offset, out);
 
         for (b = 0; b < batch; ++b)
+        {
             for (i = 0; i < out; ++i)
             {
                 l->out.val[out_offset + b * out + i] += l->bias.val[self + i];
             }
+
+            float sum = 0;
+            float max = l->out.val[out_offset + b * out];
+
+            // see softmax_layer.c
+            for (i = 1; i < out; ++i)
+            {
+                if (l->out.val[out_offset + b * out + i] > max)
+                    max = l->out.val[out_offset + b * out + i];
+            }
+
+            for (i = 0; i < out; ++i)
+            {
+                l->out.val[out_offset + b * out + i] = exp(l->out.val[out_offset + b * out + i] - max);
+                sum += l->out.val[out_offset + b * out + i];
+            }
+
+            for (i = 0; i < out; ++i)
+            {
+                l->out.val[out_offset + b * out + i] /= sum;
+            }
+        }
     }
 }
 
@@ -83,6 +106,23 @@ static void rnn_layer_backward(layer_t *l)
     {
         int in_offset = t * batch * in;
         int out_offset = t * batch * out;
+
+        // bp through softmax
+        for (b = 0; b < batch; ++b)
+        {
+            for (i = 0; i < out; ++i)
+            {
+                int o = 0;
+
+                rnn->temp[i] = 0;
+                for (o = 0; o < out; ++o)
+                {
+                    rnn->temp[i] += l->out.grad[out_offset + b * out + o] * l->out.val[out_offset + b * out + o] * ((i == o) - l->out.val[out_offset + b * out + i]);
+                }
+            }
+
+            memcpy(&l->out.grad[out_offset + b * out], rnn->temp, out * sizeof(data_val_t));
+        }
 
         gemm(1, 0, out, self, batch, 1, &l->out.grad, out_offset, out, &l->extra.val, 0, self, 0, &l->weight.grad, out_weight_offset, self);
         gemm(0, 0, batch, self, out, 1, &l->out.grad, out_offset, out, &l->weight.val, out_weight_offset, self, 0, &l->extra.grad, extra_grad_offset, self);
@@ -122,10 +162,11 @@ static const layer_func_t rnn_func = {
 
 layer_t *rnn_layer(int in, int out, int state, int len, int filler, float p0, float p1)
 {
-    rnn_layer_t *rnn = (rnn_layer_t *)alloc(1, sizeof(rnn_layer_t));
+    rnn_layer_t *rnn = (rnn_layer_t *)alloc(1, sizeof(rnn_layer_t) + out * sizeof(data_val_t));
 
-    rnn->state = state;
     rnn->len = len;
+    rnn->state = state;
+    rnn->temp = (data_val_t *)(rnn + 1);
 
     rnn->l.in.size = in * len;
     rnn->l.out.size = out * len;

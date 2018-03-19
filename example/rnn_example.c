@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     cublas_init();
 #endif
 
-    NET_CREATE(n, TRAIN_ADAGRAD, 50);
+    NET_CREATE(n, TRAIN_SGD, 50);
 
     NET_ADD(n, rnn_layer(28, 10, 50, 28, FILLER_XAVIER, 0.5, 0));
     NET_ADD(n, fc_layer(0, 10, FILLER_XAVIER, 0.5, 0));
