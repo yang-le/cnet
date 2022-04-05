@@ -1,18 +1,7 @@
-#ifdef USE_CUDA
-#include "cudahelper.h"
-#endif
-#ifdef USE_OPENCL
-#include "clhelper.h"
-#endif
-#if defined(USE_CLBLAST)
-#include "clblast_c.h"
-#elif defined(USE_CLBLAS)
-#include "clBLAS.h"
-#elif defined(USE_BLAS)
-#include <cblas.h>
-#endif
 #include "gemm.h"
-
+#if defined(USE_BLAS)
+#include <cblas.h>
+#else
 // see https://github.com/pjreddie/darknet/blob/master/src/gemm.c
 
 static void gemm_nn(int M, int N, int K, float ALPHA,
@@ -21,7 +10,7 @@ static void gemm_nn(int M, int N, int K, float ALPHA,
                     float *C, int ldc)
 {
     int i;
-#pragma omp parallel for
+    #pragma omp parallel for
     for (i = 0; i < M; ++i)
     {
         int j, k;
@@ -42,7 +31,7 @@ static void gemm_nt(int M, int N, int K, float ALPHA,
                     float *C, int ldc)
 {
     int i;
-#pragma omp parallel for
+    #pragma omp parallel for
     for (i = 0; i < M; ++i)
     {
         int j, k;
@@ -64,7 +53,7 @@ static void gemm_tn(int M, int N, int K, float ALPHA,
                     float *C, int ldc)
 {
     int i;
-#pragma omp parallel for
+    #pragma omp parallel for
     for (i = 0; i < M; ++i)
     {
         int j, k;
@@ -85,7 +74,7 @@ static void gemm_tt(int M, int N, int K, float ALPHA,
                     float *C, int ldc)
 {
     int i;
-#pragma omp parallel for
+    #pragma omp parallel for
     for (i = 0; i < M; ++i)
     {
         int j, k;
@@ -100,6 +89,7 @@ static void gemm_tt(int M, int N, int K, float ALPHA,
         }
     }
 }
+#endif
 
 void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
           data_val_t **A, int offa, int lda,
@@ -107,54 +97,7 @@ void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
           float BETA,
           data_val_t **C, int offc, int ldc)
 {
-#ifdef USE_CUDA
-    data_val_t **cuA = A + 1;
-    data_val_t **cuB = B + 1;
-    data_val_t **cuC = C + 1;
-
-    cublasSetVector(M * K, sizeof(data_val_t), *A + offa, 1, *cuA + offa, 1);
-    cublasSetVector(K * N, sizeof(data_val_t), *B + offb, 1, *cuB + offb, 1);
-    cublasSetVector(M * N, sizeof(data_val_t), *C + offc, 1, *cuC + offc, 1);
-
-    cublasSgemm(
-        cublas_handle(),
-        TB ? CUBLAS_OP_T : CUBLAS_OP_N,
-        TA ? CUBLAS_OP_T : CUBLAS_OP_N,
-        N, M, K, &ALPHA, *cuB + offb, ldb, *cuA + offa, lda, &BETA, *cuC + offc, ldc);
-
-    cublasGetVector(M * N, sizeof(data_val_t), *cuC + offc, 1, *C + offc, 1);
-#elif defined(USE_OPENCL)
-    cl_event event = NULL;
-    cl_command_queue queue = cl_get_queues(0, 0);
-
-    cl_data_val_t *clA = (cl_data_val_t *)(A + 1);
-    cl_data_val_t *clB = (cl_data_val_t *)(B + 1);
-    cl_data_val_t *clC = (cl_data_val_t *)(C + 1);
-
-    cl_data_unmap(clA);
-    cl_data_unmap(clB);
-    cl_data_unmap(clC);
-#if defined(USE_CLBLAST)
-    CLBlastSgemm(
-        CLBlastLayoutRowMajor,
-        TA ? CLBlastTransposeYes : CLBlastTransposeNo,
-        TB ? CLBlastTransposeYes : CLBlastTransposeNo,
-        M, N, K, ALPHA, clA->buf, offa, lda, clB->buf, offb, ldb, BETA, clC->buf, offc, ldc,
-        &queue, &event);
-#elif defined(USE_CLBLAS)
-    clblasSgemm(
-        clblasRowMajor,
-        TA ? clblasTrans : clblasNoTrans,
-        TB ? clblasTrans : clblasNoTrans,
-        M, N, K, ALPHA, clA->buf, offa, lda, clB->buf, offb, ldb, BETA, clC->buf, offc, ldc,
-        1, &queue, 0, NULL, &event);
-#endif
-    clWaitForEvents(1, &event);
-
-    cl_data_map(clA);
-    cl_data_map(clB);
-    cl_data_map(clC);
-#elif defined(USE_BLAS)
+#if defined(USE_BLAS)
     cblas_sgemm(
         CblasRowMajor,
         TA ? CblasTrans : CblasNoTrans,

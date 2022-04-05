@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "clutil.h"
 
 static cl_uint num_platforms = 0;
@@ -124,6 +125,29 @@ void cl_deinit(void)
     free(devices);
     free(queues);
     free(platforms);
+}
+
+static int default_plat = 0;
+static int default_dev = 0;
+
+void cl_set_default_plat(int plat)
+{
+    default_plat = plat;
+}
+
+void cl_set_default_dev(int dev)
+{
+    default_dev = dev;
+}
+
+cl_context cl_get_default_context(void)
+{
+    return contexts[default_plat];
+}
+
+cl_command_queue cl_get_default_queues(void)
+{
+    return queues[default_plat][default_dev];
 }
 
 cl_context cl_get_context(int plat)

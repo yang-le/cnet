@@ -89,7 +89,7 @@ void data_update_adam(data_t *data, double rate, int t)
 void cl_data_map(cl_data_val_t *data)
 {
     cl_int clRet = 0;
-    data->p = clEnqueueMapBuffer(cl_get_queues(0, 0), data->buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, data->size, 0, NULL, NULL, &clRet);
+    data->p = clEnqueueMapBuffer(cl_get_default_queues(), data->buf, CL_TRUE, CL_MAP_READ | CL_MAP_WRITE, 0, data->size, 0, NULL, NULL, &clRet);
     if (clRet != CL_SUCCESS)
     {
         LOG("fail to map buffer in opencl, you can try with a smaller batch size.\n");
@@ -99,7 +99,7 @@ void cl_data_map(cl_data_val_t *data)
 
 void cl_data_unmap(cl_data_val_t *data)
 {
-    cl_int clRet = clEnqueueUnmapMemObject(cl_get_queues(0, 0), data->buf, data->p, 0, NULL, NULL);
+    cl_int clRet = clEnqueueUnmapMemObject(cl_get_default_queues(), data->buf, data->p, 0, NULL, NULL);
     if (CL_SUCCESS != clRet)
     {
         LOG("fail to unmap buffer in opencl, you can try with a smaller batch size.\n");
@@ -130,7 +130,7 @@ size_t data_init(data_t *data, data_val_t *buf, int level, int batch)
 #elif defined(USE_OPENCL)
     cl_int clRet = 0;
     data->clval.size = data_size * sizeof(data_val_t);
-    data->clval.buf = clCreateBuffer(cl_get_context(0), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, data->clval.size, data->val, &clRet);
+    data->clval.buf = clCreateBuffer(cl_get_default_context(), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, data->clval.size, data->val, &clRet);
     if (clRet != CL_SUCCESS)
     {
         LOG("fail to alloc %d bytes memory in opencl, you can try with a smaller batch size.\n", data->clval.size);
@@ -154,7 +154,7 @@ size_t data_init(data_t *data, data_val_t *buf, int level, int batch)
 #elif defined(USE_OPENCL)
         cl_int clRet = 0;
         data->clgrad.size = data_size * sizeof(data_val_t);
-        data->clgrad.buf = clCreateBuffer(cl_get_context(0), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, data->clgrad.size, data->grad, &clRet);
+        data->clgrad.buf = clCreateBuffer(cl_get_default_context(), CL_MEM_READ_WRITE | CL_MEM_USE_HOST_PTR, data->clgrad.size, data->grad, &clRet);
         if (clRet != CL_SUCCESS)
         {
             LOG("fail to alloc %d bytes memory in opencl, you can try with a smaller batch size.\n", data->clgrad.size);

@@ -2,75 +2,93 @@ cmake_minimum_required(VERSION 3.9)
 
 project(cnet)
 
-include_directories(core layer opencl cuda gflags)
+set(srcs ${srcs}
+	"core/common.c"
+	"core/data.c"
+	"core/im2col.c"
+	"core/layer.c"
+	"core/net.c"
+	"core/random.c"
+	"layer/branch_layer.c"
+	"layer/cee_layer.c"
+	"layer/conv_layer.c"
+	"layer/dropout_layer.c"
+	"layer/fc_layer.c"
+	"layer/merge_layer.c"
+	"layer/mse_layer.c"
+	"layer/normalization_layer.c"
+	"layer/pooling_layer.c"
+	"layer/relu_layer.c"
+	"layer/scale_layer.c"
+	"layer/sigmoid_layer.c"
+	"layer/softmax_layer.c"
+	"layer/tanh_layer.c"
+)
+include_directories(core layer)
 
-file(GLOB core "core/*.c")
-file(GLOB layer "layer/*.c")
-
-option(USE_OPENMP "use openmp to speed up gemm" OFF)
-option(USE_BLAS "use blas to speed up gemm" OFF)
-option(USE_CLBLAS "use clblas to speed up gemm" OFF)
-option(USE_CLBLAST "use clblast to speed up gemm" OFF)
-option(USE_CUDA "use cuda to speed up gemm" OFF)
+find_package(CUDAToolkit)
+if (CUDAToolkit_FOUND)
+	add_definitions(-DUSE_CUDA)
+	set(srcs ${srcs}
+		"cuda/cudahelper.c"
+		"cuda/gemm.c"
+	)
+	set(libs ${libs} CUDA::cublas)
+	include_directories(cuda ${CUDAToolkit_INCLUDE_DIRS})
+else(CUDAToolkit_FOUND)
+	find_package(OpenCL)
+	find_package(clBLAS)
+if (OpenCL_FOUND AND clBLAS_FOUND)
+	add_definitions(-DUSE_OPENCL)
+	add_definitions(-DUSE_CLBLAS)
+	set(srcs ${srcs}
+		"opencl/clhelper.c"
+		"opencl/clutil.c"
+		"opencl/gemm.c"
+	)
+	set(libs ${libs} ${OpenCL_LIBRARIES} ${clBLAS_LIBRARIES})
+	include_directories(opencl ${OpenCL_INCLUDE_DIRS} ${clBLAS_INCLUDE_DIRS})
+else(OpenCL_FOUND AND clBLAS_FOUND)
+	set(srcs ${srcs}
+		"core/gemm.c"
+	)
+	find_package(BLAS)
+if (BLAS_FOUND)
+	add_definitions(-DUSE_BLAS)
+	set(libs ${libs} BLAS::BLAS)
+else (BLAS_FOUND)
+	find_package(OpenMP)
+if (OpenMP_FOUND)
+	set(libs ${libs} OpenMP::OpenMP_C)
+endif(OpenMP_FOUND)
+endif(BLAS_FOUND)
+endif(OpenCL_FOUND AND clBLAS_FOUND)
+endif(CUDAToolkit_FOUND)
 
 option(USE_OPENCV "use opencv as gui" OFF)
+if(USE_OPENCV)
+	find_package(OpenCV REQUIRED)
+	add_definitions(-DUSE_OPENCV)
+	set(libs ${libs} ${OpenCV_LIBS})
+	include_directories(${OpenCV_INCLUDE_DIRS})
+endif(USE_OPENCV)
 
 option(USE_GFLAGS "use gflags" OFF)
+if(USE_GFLAGS)
+	find_package(GFlags REQUIRED)
+	add_definitions(-DUSE_GFLAGS)
+	set(srcs ${srcs}
+		"gflags/flags.cc"
+	)
+	set(libs ${libs} gflags)
+	include_directories(gflags)
+endif(USE_GFLAGS)
 
 if (UNIX)
-set(libs m)
-endif()
+	set(libs ${libs} m)
+endif(UNIX)
 
-if(USE_OPENMP)
-find_package(OpenMP REQUIRED)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-set(libs ${libs} ${OpenMP_C_LIBRARIES})
-endif()
-
-if(USE_BLAS)
-find_package(BLAS REQUIRED)
-add_definitions(-DUSE_BLAS)
-set(libs ${libs} ${BLAS_LIBRARIES} ${BLAS_LINKER_FLAGS})
-endif()
-
-if(USE_CLBLAST)
-find_package(CLBlast REQUIRED)
-add_definitions(-DUSE_OPENCL)
-add_definitions(-DUSE_CLBLAST)
-file(GLOB opencl "opencl/*.c")
-set(libs ${libs} clblast)
-endif()
-
-if(USE_CLBLAS)
-find_package(clBLAS REQUIRED)
-add_definitions(-DUSE_OPENCL)
-add_definitions(-DUSE_CLBLAS)
-file(GLOB opencl "opencl/*.c")
-set(libs ${libs} clBLAS)
-endif()
-
-if(USE_CUDA)
-find_package(CUDA REQUIRED)
-add_definitions(-DUSE_CUDA)
-file(GLOB cuda "cuda/*.c")
-include_directories(${CUDA_INCLUDE_DIRS})
-set(libs ${libs} ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
-endif()
-
-if(USE_OPENCV)
-find_package(OpenCV REQUIRED)
-add_definitions(-DUSE_OPENCV)
-set(libs ${libs} ${OpenCV_LIBS})
-endif()
-
-if(USE_GFLAGS)
-find_package(GFlags REQUIRED)
-add_definitions(-DUSE_GFLAGS)
-file(GLOB gflags "gflags/*.cc")
-set(libs ${libs} gflags)
-endif()
-
-add_library(cnet ${core} ${layer} ${opencl} ${cuda} ${gflags})
+add_library(cnet ${srcs})
 target_link_libraries(cnet ${libs})
 
 add_executable(linear_example example/linear_example.c)
